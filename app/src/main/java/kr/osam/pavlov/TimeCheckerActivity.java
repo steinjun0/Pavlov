@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Message;
@@ -21,6 +22,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import kr.osam.pavlov.receiver.AlarmReceiver;
+import kr.osam.pavlov.receiver.ScreenOffReceiver;
+import kr.osam.pavlov.receiver.ScreenOnReceiver;
 
 public class TimeCheckerActivity extends AppCompatActivity {
 
@@ -31,6 +34,8 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
     AlarmManager mAlarmManager;
 
+    Intent receiverServiceIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +45,12 @@ public class TimeCheckerActivity extends AppCompatActivity {
         textFinishTime = (TextView) findViewById(R.id.textFinishTime);
         buttonSetAlarm = (Button) findViewById(R.id.buttonSetAlarm);
         buttonSetFinish = (Button) findViewById(R.id.buttonSetFinish);
+
+        receiverServiceIntent = new Intent(this, ScreenReceiverService.class);
+        startService(receiverServiceIntent);
     }
+
+
 
 
     public void onClickSetAlarm(View view){

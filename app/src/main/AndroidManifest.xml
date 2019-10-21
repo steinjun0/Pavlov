@@ -9,7 +9,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".TimeCheckerActivity">            </activity>
+        <receiver
+            android:name=".receiver.ScreenOffReceiver"
+            android:enabled="true"
+            android:exported="true"></receiver>
+        <receiver
+            android:name=".receiver.ScreenOnReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <service
+            android:name=".ScreenReceiverService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".TimeCheckerActivity">
+
+        </activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
