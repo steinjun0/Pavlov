@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -33,6 +34,9 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
     final static int THREAD_FINISH_TIME=0;
     final static int THREAD_LEFT_TIME = 1;
+    final static int THREAD_STOP = 0;
+    final static int THREAD_START = 1;
+    static int checkThread = 0;
 
     TextView textLeftTime;
     TextView textFinishTime;
@@ -92,10 +96,6 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 Calendar cal = Calendar.getInstance();
                 cal.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY) + hour);
                 cal.set(Calendar.MINUTE, now.get(Calendar.MINUTE) + min);
-                SimpleDateFormat sdf = new SimpleDateFormat("MM / dd / HH:mm:ss");
-
-                Log.d("test_time_of_now", sdf.format(now.getTime()));
-                Log.d("test_time_of_set", sdf.format(cal.getTime()));
 
                 //알람을 위한 Intent, PendingIntent 선언
                 Intent mAlarmIntent = new Intent(getApplicationContext(), AlarmReceiver.class);
@@ -108,15 +108,12 @@ public class TimeCheckerActivity extends AppCompatActivity {
                                 mAlarmIntent,
                                 PendingIntent.FLAG_UPDATE_CURRENT
                         );
+
                 //알람을 위한 AlarmManager 선언 및 설정
                 //mAlarmManager는 MainAcitivty에 선언(다른 메소드에서도 같은 매니저를 쓰기위해. 근데 상관없는듯)
                 //설정시간(cal)로 실패 알람 설정
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mAlarmManager.set(
-                        AlarmManager.RTC_WAKEUP,
-                        cal.getTimeInMillis(),
-                        mPendingIntent
-                );
+                mAlarmManager.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(),mPendingIntent);
                 ////알람 기능구현 종료////
                 //설정시간을 preference에 저장
                 //왜냐하면, AlarmManager는 알람정보를 받기만하고 출력할수 없기 때문에 어딘가에 직접저장해야한다.
@@ -124,24 +121,12 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putLong("setTime",cal.getTimeInMillis());
                 editor.apply();
-                Log.d("test_preferences","setTimeSetting + " + cal.getTimeInMillis());
-                Log.d("test_preferences", "바로 확인"+pref.getLong("setTime", 123));
 
-                if(timeThread != null) {
-                    timeThread.interrupt();
-                    timeThread = null;
-                    Log.d("test","interrupt");
+                if(checkThread==THREAD_START){
+                    stopThread(timeThread);
+                    checkThread = THREAD_STOP;
                 }
-
-                timeThread = new CheckingTimeThread(cal);
-                Bundle btemp = new Bundle();
-                Message mtemp = new Message();
-                btemp.putSerializable("set", cal);
-                mtemp.setData(btemp);
-                mtemp.what=TimeCheckerActivity.THREAD_LEFT_TIME;
-                writingTimeHandler.sendMessage(mtemp);
-                timeThread.start();
-
+                startThread(timeThread, cal);
             }
         },
                 0,
@@ -150,6 +135,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
 
     public void onClickSetFinish(View view){
         ////알람 기능구현 시작////
@@ -192,17 +178,11 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //mAlarmManager는 MainAcitivty에 선언
                 //requestCode:1로 성공 알람 설정
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mAlarmManager.set(
-                        AlarmManager.RTC_WAKEUP,
-                        cal.getTimeInMillis(),
-                        mPendingIntent
-                );
+                mAlarmManager.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), mPendingIntent);
                 ////알람 기능구현 종료////
 
-                Bundle bundle = new Bundle();
-                bundle.putSerializable("finish",cal);
-                Message msg = new Message();
-                msg.setData(bundle);
+                Message msg = setMsg("finish",cal);
+
                 msg.what = TimeCheckerActivity.THREAD_FINISH_TIME;
                 writingTimeHandler.sendMessage(msg);
 
@@ -214,6 +194,8 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+
 
     public class ScreenReceiver extends BroadcastReceiver {
         long time = 0;
@@ -228,25 +210,16 @@ public class TimeCheckerActivity extends AppCompatActivity {
             if (ScreenOnReceiver.SCREEN_ON_NOTIFICATION.equals(intent.getAction())) {
                 //intent로 ScreenOn 정보 받기
                 presentOnTime = intent.getLongExtra("presentTime", 0 );
-                String onLatest = "On Latest" + intent.getStringExtra("present");
-                String onPast = "On " + intent.getStringExtra("past");
-                //화면에 띄우기
-                //textScreenOn.setText(onLatest);
-                // textPastScreenOn.setText(onPast);
 
-                Log.d("test", intent.getStringExtra("name")+" onReceive");
                 //저장된 사용시간 불러오기
-                SimpleDateFormat sdf = new SimpleDateFormat("MM / dd / HH:mm:ss");
                 SharedPreferences pref = getSharedPreferences("preference", MODE_PRIVATE);
                 if(time == 0) {
                     time = pref.getLong("setTime", 0);
-                    Log.d("test_load_setTime", "setTime = " + sdf.format(time));
                 }
                 //화면 꺼져 있던 시간 구하기
                 if(presentOffTime != 0){
                     durationOff = presentOnTime - presentOffTime;
                 }
-                Log.d("test_duration_Off", sdf.format(durationOff));
 
                 //알람을 위한 Intent, PendingIntent 선언
                 Intent mAlarmIntent = new Intent("com.example.mission1.receiver.ALARM_ON");
@@ -268,19 +241,15 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 );
                 //세팅시간 변경(누적을 위해)
                 time = time + durationOff;
-                Log.d("test","changed_set_time: " + sdf.format(time));
+
                 Calendar temp = Calendar.getInstance();
                 temp.setTimeInMillis(time);
-                if(timeThread == null) {
-                    timeThread = new CheckingTimeThread(temp);
-                    timeThread.start();
-                }
+                startThread(timeThread, temp);
 
             } else if (ScreenOffReceiver.SCREEN_OFF_NOTIFICATION.equals(intent.getAction())) {
                 //intent로 ScreenOff 정보 받기
+                checkThread = THREAD_STOP;
                 presentOffTime = intent.getLongExtra("presentTime", 0 );
-                String offLatest = "Off Latest "+ intent.getStringExtra("present");
-                String offPast = "Off Past " + intent.getStringExtra("past");
                 Log.d("test", intent.getStringExtra("name")+" offReceive");
                 //화면 켜져있던 시간 구하기
                 durationOn = presentOffTime - presentOnTime;
@@ -299,11 +268,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
                 Log.d("test_off_cancel","alarm is canceled");
-
-                if(timeThread != null) {
-                    timeThread.interrupt();
-                    timeThread = null;
-                }
+                stopThread(timeThread);
 
             }
             else if (AlarmReceiver.MISSTION_FAIL_NOTIFICATION.equals(intent.getAction())){
@@ -321,10 +286,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //성공 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
-                if(timeThread != null) {
-                    timeThread.interrupt();
-                    timeThread = null;
-                }
+                stopThread(timeThread);
             }
             else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
                 //알람을 위한 Intent, PendingIntent 선언
@@ -341,10 +303,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //실패 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
-                if(timeThread != null) {
-                    timeThread.interrupt();
-                    timeThread = null;
-                }
+                stopThread(timeThread);
             }
         }
     }
@@ -360,7 +319,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
         public void run() {
             super.run();
 
-            while(cal.compareTo(Calendar.getInstance()) >= 0 && !(timeThread.isInterrupted())) {
+            while(cal.compareTo(Calendar.getInstance()) >= 0 ) {
                 Log.d("test", "Thread Running");
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("set",cal);
@@ -368,11 +327,13 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 msg.setData(bundle);
                 msg.what=TimeCheckerActivity.THREAD_LEFT_TIME;
 
-
                 try {
-                    Log.d("test", "sendMessage");
-                    writingTimeHandler.sendMessage(msg);
-                    Thread.sleep(900);
+                    if(checkThread != THREAD_STOP) {
+                        Log.d("test", "sendMessage");
+                        writingTimeHandler.sendMessage(msg);
+                        Thread.sleep(900);
+                    }
+                    else{return;}
                 }catch(InterruptedException e){
                     Log.d("test","Thread return");
                     return;
@@ -413,6 +374,35 @@ public class TimeCheckerActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+
+
+    public void stopThread(Thread thread){
+        if(thread != null) {
+            thread.interrupt();
+            thread = null;
+            checkThread = THREAD_STOP;
+            Log.d("test","thread interrupt");
+        }else{
+            Log.d("test", "thread already null");
+        }
+    }
+
+    public void startThread(Thread thread, Calendar cal){
+        thread = null;
+        thread = new CheckingTimeThread(cal);
+        thread.start();
+        checkThread = THREAD_START;
+        Log.d("test","thread start");
+    }
+
+    public Message setMsg( String stringHash, Serializable obj){
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("finish",obj);
+        Message msg = new Message();
+        msg.setData(bundle);
+        return msg;
     }
 
 }
