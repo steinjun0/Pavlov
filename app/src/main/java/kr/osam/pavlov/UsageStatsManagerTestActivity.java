@@ -1,29 +1,51 @@
 package kr.osam.pavlov;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.app.ActivityManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.widget.ImageView;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.TextView;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
+
+    private void showAlertDialog(ArrayList<ApplicationInfo> packages) {
+        // Prepare grid view
+        GridView gridView = new GridView(this);
+        PackageIconGridViewAdapter gridAdapter = new PackageIconGridViewAdapter(this, R.layout.item_packageicon, packages);
+
+        gridView.setAdapter(gridAdapter);
+        gridView.setNumColumns(5);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // do something here
+            }
+        });
+
+        // Set grid view to alertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(gridView);
+        builder.setTitle("Goto");
+        builder.show();
+    }
 
     public int checkPermissions()
     {
@@ -75,10 +97,11 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         setContentView(R.layout.activity_usage_stats_manager_test);
 
         final PackageManager pm = getPackageManager();
-//get a list of installed apps.
+
+        //설치된 패키지들의 리스트
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
-        try
+        /*try
         {
             Drawable icon = getPackageManager().getApplicationIcon("com.egert.piano");
             ImageView iv = findViewById(R.id.iv_applist);
@@ -87,7 +110,7 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         catch (PackageManager.NameNotFoundException e)
         {
             e.printStackTrace();
-        }
+        }*/
 
 
 
@@ -133,6 +156,15 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
             TextView tv = findViewById(R.id.tv_appusetime);
             tv.setText(temp);
+            ArrayList<ApplicationInfo> arrayPackages = new ArrayList<>();
+
+            arrayPackages.addAll(packages);
+
+            showAlertDialog(arrayPackages);
+        }
+        else
+        {
+
         }
 
     }
