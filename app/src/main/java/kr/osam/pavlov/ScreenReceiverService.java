@@ -52,7 +52,7 @@ public class ScreenReceiverService extends Service {
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationManager.createNotificationChannel(new NotificationChannel("default", "기본 채널", NotificationManager.IMPORTANCE_DEFAULT));
-        }
+        }else builder.setSmallIcon(R.mipmap.ic_launcher);
 
 // id값은
 // 정의해야하는 각 알림의 고유한 int값

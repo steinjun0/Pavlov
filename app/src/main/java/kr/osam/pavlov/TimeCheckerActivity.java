@@ -42,6 +42,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
     TextView textFinishTime;
     Button buttonSetAlarm;
     Button buttonSetFinish;
+    Button buttonService;
 
     AlarmManager mAlarmManager;
 
@@ -60,6 +61,14 @@ public class TimeCheckerActivity extends AppCompatActivity {
         textFinishTime = (TextView) findViewById(R.id.textFinishTime);
         buttonSetAlarm = (Button) findViewById(R.id.buttonSetAlarm);
         buttonSetFinish = (Button) findViewById(R.id.buttonSetFinish);
+        buttonService = (Button) findViewById(R.id.button);
+        buttonService.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), ScreenReceiverService.class);
+                startService(intent);
+            }
+        });
 
         screenReceiver = new ScreenReceiver();
         IntentFilter filter = new IntentFilter();
@@ -73,6 +82,8 @@ public class TimeCheckerActivity extends AppCompatActivity {
         ScreenReceiverService screenReceiverService = new ScreenReceiverService();
         if(Build.VERSION.SDK_INT>=26) {
             startForegroundService(receiverServiceIntent);
+        }else{
+            startService(receiverServiceIntent);
         }
 
         writingTimeHandler = new WritingTimeHandler();
@@ -122,11 +133,11 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 editor.putLong("setTime",cal.getTimeInMillis());
                 editor.apply();
 
-                if(checkThread==THREAD_START){
-                    stopThread(timeThread);
-                    checkThread = THREAD_STOP;
-                }
-                startThread(timeThread, cal);
+
+                timeThread = new CheckingTimeThread(cal);
+                timeThread.start();
+                Log.d("test", "setAlarm: timeThread");
+
             }
         },
                 0,
@@ -244,7 +255,11 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
                 Calendar temp = Calendar.getInstance();
                 temp.setTimeInMillis(time);
-                startThread(timeThread, temp);
+
+                Log.d("test", "여기오란ㅇㅁ롼이라인");
+                timeThread = new CheckingTimeThread(temp);
+                timeThread.start();
+
 
             } else if (ScreenOffReceiver.SCREEN_OFF_NOTIFICATION.equals(intent.getAction())) {
                 //intent로 ScreenOff 정보 받기
@@ -268,8 +283,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
                 Log.d("test_off_cancel","alarm is canceled");
-                stopThread(timeThread);
-
+                timeThread.interrupt();
             }
             else if (AlarmReceiver.MISSTION_FAIL_NOTIFICATION.equals(intent.getAction())){
                 //알람을 위한 Intent, PendingIntent 선언
@@ -286,7 +300,11 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //성공 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
-                stopThread(timeThread);
+                try {
+                    stopThread(timeThread);
+                }catch(NullPointerException e){
+                    Log.d("test", "timeThread = null");
+                }
             }
             else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
                 //알람을 위한 Intent, PendingIntent 선언
@@ -303,14 +321,22 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //실패 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
-                stopThread(timeThread);
+                try {
+                    stopThread(timeThread);
+                } catch (NullPointerException e) {
+                    Log.d("test", "timeThread = null");
+                }
             }
         }
     }
-    class CheckingTimeThread extends Thread{
 
+
+
+
+
+    class CheckingTimeThread extends Thread{
         //Handler handler;
-        Calendar cal;
+        public Calendar cal;
         CheckingTimeThread(Calendar cal){
             //this.handler = handler;
             this.cal = cal;
@@ -328,15 +354,13 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 msg.what=TimeCheckerActivity.THREAD_LEFT_TIME;
 
                 try {
-                    if(checkThread != THREAD_STOP) {
-                        Log.d("test", "sendMessage");
-                        writingTimeHandler.sendMessage(msg);
-                        Thread.sleep(900);
-                    }
-                    else{return;}
+                    Log.d("test", "sendMessage");
+                    writingTimeHandler.sendMessage(msg);
+                    Log.d("test", "msg.what = " + msg.what);
+                    Thread.sleep(1000);
                 }catch(InterruptedException e){
                     Log.d("test","Thread return");
-                    return;
+                    break;
                 }
             }
         }
@@ -378,23 +402,27 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
 
 
-    public void stopThread(Thread thread){
-        if(thread != null) {
+    public void stopThread(CheckingTimeThread thread){
+        if(thread == null) {
+            Log.d("test", "thread already null");
+        }else{
             thread.interrupt();
             thread = null;
             checkThread = THREAD_STOP;
+
             Log.d("test","thread interrupt");
-        }else{
-            Log.d("test", "thread already null");
         }
     }
 
-    public void startThread(Thread thread, Calendar cal){
-        thread = null;
-        thread = new CheckingTimeThread(cal);
-        thread.start();
-        checkThread = THREAD_START;
-        Log.d("test","thread start");
+    public void startThread(CheckingTimeThread thread, Calendar cal){
+        try {
+            thread.setCal(cal);
+            thread.start();
+            checkThread = THREAD_START;
+            Log.d("test", "thread start");
+        }catch(NullPointerException e){
+            Log.d("test", "startThread: Time Thread = null");
+        }
     }
 
     public Message setMsg( String stringHash, Serializable obj){
