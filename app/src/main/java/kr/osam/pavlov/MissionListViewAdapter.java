@@ -1,13 +1,11 @@
 package kr.osam.pavlov;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 
 import java.util.ArrayList;
@@ -36,7 +34,7 @@ public class MissionListViewAdapter extends BaseAdapter {
         // "listview_item" Layout을 inflate하여 convertView 참조 획득.
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.item_mainmissionlistview, parent, false);
+            convertView = inflater.inflate(R.layout.item_checkmission, parent, false);
         }
 
         // 화면에 표시될 View(Layout이 inflate된)으로부터 위젯에 대한 참조 획득
@@ -46,10 +44,11 @@ public class MissionListViewAdapter extends BaseAdapter {
         Mission listViewItem = missions.get(position);
 
         // 아이템 내 각 위젯에 데이터 반영
-        iconImageView.setImageResource(R.drawable.check);
-        iconImageView.getLayoutParams().height = 200;
-        iconImageView.getLayoutParams().width = 200;
-        iconImageView.requestLayout();
+        if(true)
+        {
+            iconImageView.setImageResource(R.drawable.success);
+        }
+
 
         return convertView;
     }
@@ -71,5 +70,10 @@ public class MissionListViewAdapter extends BaseAdapter {
         Mission item = new Mission(0, "dd", missions.size());
 
         missions.add(item);
+    }
+
+    public void deleteAll()
+    {
+        missions.clear();
     }
 }

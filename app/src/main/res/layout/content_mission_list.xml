@@ -8,7 +8,7 @@
     tools:context=".MissionListActivity"
     tools:showIn="@layout/activity_mission_list"
     android:orientation="vertical"
-    android:background="#cccccc">
+    android:background="#EEEEEE">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
