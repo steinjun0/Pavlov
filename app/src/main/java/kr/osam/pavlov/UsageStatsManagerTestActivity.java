@@ -7,9 +7,11 @@ import android.Manifest;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -17,33 +19,41 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
+    List<ApplicationInfo> packages;
+    private void showAlertDialog(ArrayList<Drawable> icons, final Context context) {
 
-    private void showAlertDialog(ArrayList<ApplicationInfo> packages) {
         // Prepare grid view
         GridView gridView = new GridView(this);
-        PackageIconGridViewAdapter gridAdapter = new PackageIconGridViewAdapter(this, R.layout.item_packageicon, packages);
+        PackageIconGridViewAdapter gridAdapter = new PackageIconGridViewAdapter(this, R.layout.item_packageicon, icons);
 
         gridView.setAdapter(gridAdapter);
-        gridView.setNumColumns(5);
+        gridView.setNumColumns(4);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // do something here
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                TextView dialogTv = new TextView(context);
+                dialogTv.setText("사용 시간을 검사할 어플리케이션을 골라주세요");
+                builder.setView(dialogTv);
+                builder.setTitle(packages.get(position).packageName);
+                builder.show();
             }
         });
 
         // Set grid view to alertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(gridView);
-        builder.setTitle("Goto");
+        builder.setTitle("App Selection");
         builder.show();
     }
 
@@ -99,8 +109,8 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         final PackageManager pm = getPackageManager();
 
         //설치된 패키지들의 리스트
-        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-
+        packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        ArrayList<Drawable> icons = new ArrayList<Drawable>();
         /*try
         {
             Drawable icon = getPackageManager().getApplicationIcon("com.egert.piano");
@@ -143,6 +153,15 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
                 temp += packageName + ": " + packageUsedTime + " 초\n";
 
+                try
+                {
+                    icons.add(getPackageManager().getApplicationIcon(packageName));
+                }
+                catch (PackageManager.NameNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+
                 //Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
                 //Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
             }
@@ -156,11 +175,8 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
             TextView tv = findViewById(R.id.tv_appusetime);
             tv.setText(temp);
-            ArrayList<ApplicationInfo> arrayPackages = new ArrayList<>();
 
-            arrayPackages.addAll(packages);
-
-            showAlertDialog(arrayPackages);
+            showAlertDialog(icons, this);
         }
         else
         {

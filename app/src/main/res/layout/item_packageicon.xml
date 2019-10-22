@@ -6,7 +6,8 @@
     <ImageView
         android:id="@+id/iv_pkgicon"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="80dp"
+        android:padding="5dp"
         />
 
 </LinearLayout>
