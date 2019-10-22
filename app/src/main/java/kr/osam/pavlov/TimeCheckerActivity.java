@@ -42,7 +42,6 @@ public class TimeCheckerActivity extends AppCompatActivity {
     TextView textFinishTime;
     Button buttonSetAlarm;
     Button buttonSetFinish;
-    Button buttonService;
 
     AlarmManager mAlarmManager;
 
@@ -61,14 +60,6 @@ public class TimeCheckerActivity extends AppCompatActivity {
         textFinishTime = (TextView) findViewById(R.id.textFinishTime);
         buttonSetAlarm = (Button) findViewById(R.id.buttonSetAlarm);
         buttonSetFinish = (Button) findViewById(R.id.buttonSetFinish);
-        buttonService = (Button) findViewById(R.id.button);
-        buttonService.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), ScreenReceiverService.class);
-                startService(intent);
-            }
-        });
 
         screenReceiver = new ScreenReceiver();
         IntentFilter filter = new IntentFilter();
@@ -132,11 +123,19 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putLong("setTime",cal.getTimeInMillis());
                 editor.apply();
-
-
-                timeThread = new CheckingTimeThread(cal);
-                timeThread.start();
-                Log.d("test", "setAlarm: timeThread");
+                try {
+                    if (timeThread.getState() == Thread.State.RUNNABLE || timeThread.getState() == Thread.State.TIMED_WAITING || timeThread.getState() == Thread.State.WAITING || timeThread.getState() == Thread.State.TERMINATED) {
+                        Log.d("test", "Runnable");
+                        timeThread.interrupt();
+                        timeThread = new CheckingTimeThread(cal);
+                        timeThread.start();
+                    }
+                    Log.d("test", "timeThread = not null " + timeThread.getState());
+                }catch(Exception e){
+                    timeThread = new CheckingTimeThread(cal);
+                    timeThread.start();
+                    Log.d("test", "timeThread = null");
+                }
 
             }
         },
@@ -307,6 +306,7 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 }
             }
             else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
+                textLeftTime.setText("0:0:0");
                 //알람을 위한 Intent, PendingIntent 선언
                 Intent mAlarmIntent = new Intent("com.example.mission1.receiver.ALARM_ON");
                 mAlarmIntent.putExtra("flag","fail");
