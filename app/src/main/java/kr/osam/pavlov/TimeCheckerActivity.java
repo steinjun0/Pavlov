@@ -1,5 +1,6 @@
 package kr.osam.pavlov;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlarmManager;
@@ -10,7 +11,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -28,6 +31,9 @@ import kr.osam.pavlov.receiver.ScreenOnReceiver;
 
 public class TimeCheckerActivity extends AppCompatActivity {
 
+    final static int THREAD_FINISH_TIME=0;
+    final static int THREAD_LEFT_TIME = 1;
+
     TextView textLeftTime;
     TextView textFinishTime;
     Button buttonSetAlarm;
@@ -37,6 +43,9 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
     Intent receiverServiceIntent;
     ScreenReceiver screenReceiver;
+
+    CheckingTimeThread timeThread = null;
+    WritingTimeHandler writingTimeHandler = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +66,12 @@ public class TimeCheckerActivity extends AppCompatActivity {
         this.registerReceiver(screenReceiver, filter);
 
         receiverServiceIntent = new Intent(this, ScreenReceiverService.class);
-        startService(receiverServiceIntent);
+        ScreenReceiverService screenReceiverService = new ScreenReceiverService();
+        if(Build.VERSION.SDK_INT>=26) {
+            startForegroundService(receiverServiceIntent);
+        }
+
+        writingTimeHandler = new WritingTimeHandler();
     }
 
     public void onClickSetAlarm(View view){
@@ -112,6 +126,21 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 editor.apply();
                 Log.d("test_preferences","setTimeSetting + " + cal.getTimeInMillis());
                 Log.d("test_preferences", "바로 확인"+pref.getLong("setTime", 123));
+
+                if(timeThread != null) {
+                    timeThread.interrupt();
+                    timeThread = null;
+                    Log.d("test","interrupt");
+                }
+
+                timeThread = new CheckingTimeThread(cal);
+                Bundle btemp = new Bundle();
+                Message mtemp = new Message();
+                btemp.putSerializable("set", cal);
+                mtemp.setData(btemp);
+                mtemp.what=TimeCheckerActivity.THREAD_LEFT_TIME;
+                writingTimeHandler.sendMessage(mtemp);
+                timeThread.start();
 
             }
         },
@@ -174,7 +203,8 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 bundle.putSerializable("finish",cal);
                 Message msg = new Message();
                 msg.setData(bundle);
-                msg.what = 0;
+                msg.what = TimeCheckerActivity.THREAD_FINISH_TIME;
+                writingTimeHandler.sendMessage(msg);
 
             }
         },
@@ -241,6 +271,10 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 Log.d("test","changed_set_time: " + sdf.format(time));
                 Calendar temp = Calendar.getInstance();
                 temp.setTimeInMillis(time);
+                if(timeThread == null) {
+                    timeThread = new CheckingTimeThread(temp);
+                    timeThread.start();
+                }
 
             } else if (ScreenOffReceiver.SCREEN_OFF_NOTIFICATION.equals(intent.getAction())) {
                 //intent로 ScreenOff 정보 받기
@@ -265,7 +299,12 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
                 Log.d("test_off_cancel","alarm is canceled");
-                //timeThread.interrupt();
+
+                if(timeThread != null) {
+                    timeThread.interrupt();
+                    timeThread = null;
+                }
+
             }
             else if (AlarmReceiver.MISSTION_FAIL_NOTIFICATION.equals(intent.getAction())){
                 //알람을 위한 Intent, PendingIntent 선언
@@ -282,7 +321,10 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //성공 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
-                //timeThread.interrupt();
+                if(timeThread != null) {
+                    timeThread.interrupt();
+                    timeThread = null;
+                }
             }
             else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
                 //알람을 위한 Intent, PendingIntent 선언
@@ -299,8 +341,80 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 //실패 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
-                //timeThread.interrupt();
+                if(timeThread != null) {
+                    timeThread.interrupt();
+                    timeThread = null;
+                }
             }
         }
     }
+    class CheckingTimeThread extends Thread{
+
+        //Handler handler;
+        Calendar cal;
+        CheckingTimeThread(Calendar cal){
+            //this.handler = handler;
+            this.cal = cal;
+        }
+        @Override
+        public void run() {
+            super.run();
+
+            while(cal.compareTo(Calendar.getInstance()) >= 0 && !(timeThread.isInterrupted())) {
+                Log.d("test", "Thread Running");
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("set",cal);
+                Message msg = new Message();
+                msg.setData(bundle);
+                msg.what=TimeCheckerActivity.THREAD_LEFT_TIME;
+
+
+                try {
+                    Log.d("test", "sendMessage");
+                    writingTimeHandler.sendMessage(msg);
+                    Thread.sleep(900);
+                }catch(InterruptedException e){
+                    Log.d("test","Thread return");
+                    return;
+                }
+            }
+        }
+        public void setCal(Calendar cal){
+            this.cal = cal;
+        }
+    }
+
+    class WritingTimeHandler extends Handler {
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            Log.d("test","Handler Receive");
+            switch (msg.what) {
+                case TimeCheckerActivity.THREAD_FINISH_TIME:
+                    Log.d("test","Handle Message FINISH_TIME");
+                    Bundle finishBundle;
+                    finishBundle = msg.getData();
+                    Calendar finisthCal = (Calendar) finishBundle.getSerializable("finish");
+                    SimpleDateFormat finishSdf = new SimpleDateFormat("MM/dd/kk:mm");
+                    textFinishTime.setText(finishSdf.format(finisthCal.getTime()));
+                    break;
+                case TimeCheckerActivity.THREAD_LEFT_TIME:
+                    Log.d("test","Handle Message LEFT_TIME");
+                    Bundle setBundle;
+                    setBundle = msg.getData();
+                    Calendar setCal = (Calendar) setBundle.getSerializable("set");
+                    Calendar now = Calendar.getInstance();
+                    long diff = setCal.getTimeInMillis() - now.getTimeInMillis();
+                    int sec = (int)(diff/1000)%60;
+                    int min = (int)((diff/1000)/60)%60;
+                    int hr = (int)(((diff/1000)/60)/60)%60;
+                    Log.d("test","time: "+hr+":"+min+":"+sec);
+                    textLeftTime.setText(hr+":"+min+":"+sec);
+                    break;
+            }
+        }
+    }
+
 }
+
+
