@@ -8,13 +8,18 @@ import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class UsageStatsManagerTestActivity extends AppCompatActivity {
@@ -69,6 +74,23 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_usage_stats_manager_test);
 
+        final PackageManager pm = getPackageManager();
+//get a list of installed apps.
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+        try
+        {
+            Drawable icon = getPackageManager().getApplicationIcon("com.egert.piano");
+            ImageView iv = findViewById(R.id.iv_applist);
+            iv.setImageDrawable(icon);
+        }
+        catch (PackageManager.NameNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+
+
         if(Build.VERSION.SDK_INT >= 21)
         {
             startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), 1);
@@ -76,19 +98,37 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
             UsageStatsManager mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
             Map<String, UsageStats> lUsageStatsMap = mUsageStatsManager.
-                    queryAndAggregateUsageStats(0, System.currentTimeMillis());
+                    queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
 
         /*long totalTimeUsageInMillis = lUsageStatsMap.get("kr.osam.pavlov").
                 getTotalTimeInForeground();*/
 
             //String temp = String.valueOf(totalTimeUsageInMillis);
 
-            Iterator<String> iterator = lUsageStatsMap.keySet().iterator();
+            //Iterator<String> iterator = lUsageStatsMap.keySet().iterator();
+            //Iterator<ResolveInfo> listIterator = pkgAppsList.listIterator();
+
             String temp = "";
-            while(iterator.hasNext()) {
-                String key = iterator.next();
-                temp += key + " ";
+
+            for (ApplicationInfo packageInfo : packages) {
+                String packageName = packageInfo.packageName;
+                long packageUsedTime = 0;
+                if(lUsageStatsMap.containsKey(packageName))
+                {
+                    packageUsedTime = lUsageStatsMap.get(packageInfo.packageName).getTotalTimeInForeground()/1000;
+                }
+
+                temp += packageName + ": " + packageUsedTime + " 초\n";
+
+                //Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
+                //Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
             }
+            /*while(listIterator.hasNext()) {
+                String pkgName = listIterator.next().resolvePackageName;
+                temp += pkgName + ": " + lUsageStatsMap.get(pkgName).getTotalTimeInForeground()/1000 + " 초\n";
+            }*/
+
+
 
 
             TextView tv = findViewById(R.id.tv_appusetime);
