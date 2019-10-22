@@ -3,17 +3,22 @@ package kr.osam.pavlov;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.app.TimePickerDialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -47,6 +52,32 @@ public class TimeCheckerActivity extends AppCompatActivity {
     CheckingTimeThread timeThread = null;
     WritingTimeHandler writingTimeHandler = null;
 
+
+    ScreenReceiverService ipc_service = null;	//ServiceClass.class객체를 가져오는..듯
+
+    private ServiceConnection connection = new ServiceConnection(){
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service){
+            //1. 접속에 성공했을 때 호출되는 메소드
+            //2. IBinder의 onBinder메소드가 호출되고,  LocalBinder객체가 반환됨
+            //3. 그 객체가 IBinder service로 반환됨
+            //전달 받을 바인더 클래스를 이용해 서비스 객체를 추출한다.
+            ScreenReceiverService.LocalBinder binder = (ScreenReceiverService.LocalBinder)service;
+            ipc_service = binder.getService();
+
+            long time = ipc_service.screenReceiver.getTime();
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(time);
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name){ //접속에 해제했을  때 호출되는 메소드
+            ipc_service = null;
+        }
+    };
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,13 +94,22 @@ public class TimeCheckerActivity extends AppCompatActivity {
         filter.addAction(ScreenOnReceiver.SCREEN_ON_NOTIFICATION);
         filter.addAction(AlarmReceiver.MISSTION_FAIL_NOTIFICATION);
         filter.addAction(AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION);
-        this.registerReceiver(screenReceiver, filter);
+        //this.registerReceiver(screenReceiver, filter);
 
         receiverServiceIntent = new Intent(this, ScreenReceiverService.class);
         ScreenReceiverService screenReceiverService = new ScreenReceiverService();
-        if(Build.VERSION.SDK_INT>=26) {
-            startForegroundService(receiverServiceIntent);
+        boolean chk = isServiceRunning("kr.osam.pavlov.ScreenReceiverService");
+        //서비스가 가동중이지 않을 때 서비스를 실행시킨다
+        //서비스가 중복으로 실행되지 않도록
+        if(chk == false) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+                startForegroundService(receiverServiceIntent);		//ServiceClass의 서비스 실행
+            } else {
+                startService(receiverServiceIntent);			//ServiceClass의 서비스 실행
+            }
         }
+        //서비스에 접속한다.
+        bindService(receiverServiceIntent, connection, BIND_AUTO_CREATE);
 
         writingTimeHandler = new WritingTimeHandler();
     }
@@ -414,6 +454,19 @@ public class TimeCheckerActivity extends AppCompatActivity {
             }
         }
     }
+
+    public Boolean isServiceRunning(String serviceName) {
+
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+
+        for (ActivityManager.RunningServiceInfo runningServiceInfo : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceName.equals(runningServiceInfo.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }
 
