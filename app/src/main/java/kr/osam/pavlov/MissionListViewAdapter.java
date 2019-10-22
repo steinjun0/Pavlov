@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 
 import java.util.ArrayList;
@@ -38,17 +40,16 @@ public class MissionListViewAdapter extends BaseAdapter {
         }
 
         // 화면에 표시될 View(Layout이 inflate된)으로부터 위젯에 대한 참조 획득
-        /*ImageView iconImageView = (ImageView) convertView.findViewById(R.id.imageView1) ;
-        TextView titleTextView = (TextView) convertView.findViewById(R.id.textView1) ;
-        TextView descTextView = (TextView) convertView.findViewById(R.id.textView2) ;*/
+        ImageView iconImageView = (ImageView) convertView.findViewById(R.id.iv_checkicon);
 
         // Data Set(missions)에서 position에 위치한 데이터 참조 획득
         Mission listViewItem = missions.get(position);
 
         // 아이템 내 각 위젯에 데이터 반영
-        /*iconImageView.setImageDrawable(listViewItem.getIcon());
-        titleTextView.setText(listViewItem.getTitle());
-        descTextView.setText(listViewItem.getDesc());*/
+        iconImageView.setImageResource(R.drawable.check);
+        iconImageView.getLayoutParams().height = 200;
+        iconImageView.getLayoutParams().width = 200;
+        iconImageView.requestLayout();
 
         return convertView;
     }
@@ -67,7 +68,7 @@ public class MissionListViewAdapter extends BaseAdapter {
 
     // 아이템 데이터 추가를 위한 함수. 개발자가 원하는대로 작성 가능.
     public void addItem() {
-        Mission item = new Mission(0, "dd");
+        Mission item = new Mission(0, "dd", missions.size());
 
         missions.add(item);
     }
