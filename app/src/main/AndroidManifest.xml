@@ -2,7 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kr.osam.pavlov">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"></uses-permission>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -11,10 +15,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service
+            android:name=".TimeCheckerService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".MissionManager"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".GPSDistanceService"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".StepCounterService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <activity android:name=".Gps_Meter_Activity" />
+        <activity android:name=".StepCountingActivity" />
+
         <receiver
             android:name=".receiver.ScreenOffReceiver"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true" />
         <receiver
             android:name=".receiver.ScreenOnReceiver"
             android:enabled="true"
@@ -25,12 +49,12 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".TimeCheckerActivity"></activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".TimeCheckerActivity" />
+        <activity
+            android:name=".MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"></action>
+                <category android:name="android.intent.category.LAUNCHER"></category>
             </intent-filter>
         </activity>
 
@@ -42,6 +66,10 @@
                 <action android:name="kr.osam.pavlov.receiver.ALARM_ON" />
             </intent-filter>
         </receiver>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyACYm2y0HwlPWaOEXxa4f8IO7xcOht67Wc" />
     </application>
 
 </manifest>

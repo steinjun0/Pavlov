@@ -7,9 +7,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Build;
@@ -24,12 +26,33 @@ import kr.osam.pavlov.receiver.AlarmReceiver;
 import kr.osam.pavlov.receiver.ScreenOffReceiver;
 import kr.osam.pavlov.receiver.ScreenOnReceiver;
 
+import static kr.osam.pavlov.Missons.Mission.MISSION_FAILED;
+import static kr.osam.pavlov.Missons.Mission.MISSION_ON_PROGRESS;
+import static kr.osam.pavlov.Missons.Mission.MISSION_SUCCES;
+import static kr.osam.pavlov.Missons.Mission.MISSION_TYPE_USEAGE_DEVICE;
+
 public class ScreenReceiverService extends Service {
+    Intent TCSIntent;
 
     TimeCheckerJSON dataInService = new TimeCheckerJSON();
 
     BroadcastReceiver screenOnReceiver = new ScreenOnReceiver();
     BroadcastReceiver screenOffReceiver = new ScreenOffReceiver();
+
+    TimeCheckerService timeCheckerService = new TimeCheckerService();
+
+    ServiceConnection conn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            TimeCheckerService.LocalBinder localBinder = (TimeCheckerService.LocalBinder) service;
+            timeCheckerService = localBinder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     public ScreenReceiverService() {
     }
@@ -47,18 +70,29 @@ public class ScreenReceiverService extends Service {
         return ScreenBinder;
     }
 
-    public void setData(TimeCheckerJSON json){
+
+    providerThread thread;
+
+    public void setData(TimeCheckerJSON json) {
         this.dataInService = json;
-        Log.d("test1","set Json: setTime: "+dataInService.setTime);
+        Log.d("test1", "set Json: setTime: " + dataInService.setTime);
+        thread = new providerThread();
+        thread.start();
     }
-    public TimeCheckerJSON getData(){
-        Log.d("test1","get Json: setTime: "+dataInService.setTime);
+
+    public TimeCheckerJSON getData() {
+        Log.d("test1", "get Json: setTime: " + dataInService.setTime);
+        thread.interrupt();
         return this.dataInService;
     }
+
+
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+
         ScreenReceiver screenReceiver = new ScreenReceiver();
 
         IntentFilter onFilter = new IntentFilter();
@@ -180,7 +214,13 @@ public class ScreenReceiverService extends Service {
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
                 dataInService.totalUsingTime = dataInService.setTime;
-                dataInService.isWorking = 3;
+                dataInService.isWorking = MISSION_FAILED;
+
+
+                bindService(TCSIntent, conn, Context.BIND_AUTO_CREATE);
+                Calendar temp = Calendar.getInstance();
+                timeCheckerService.setData((int)dataInService.finishTime, (int)(dataInService.setTime-temp.getTimeInMillis()),MISSION_TYPE_USEAGE_DEVICE, MISSION_FAILED);
+                unbindService(conn);
             }
             else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
                 //알람을 위한 Intent, PendingIntent 선언
@@ -197,8 +237,28 @@ public class ScreenReceiverService extends Service {
                 //실패 알람 취소
                 mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 mAlarmManager.cancel(mPendingIntent);
+                dataInService.isWorking = MISSION_SUCCES;
 
-                dataInService.isWorking = 1;
+                bindService(TCSIntent, conn, Context.BIND_AUTO_CREATE);
+                Calendar temp = Calendar.getInstance();
+                timeCheckerService.setData((int)dataInService.finishTime, (int)(dataInService.setTime-temp.getTimeInMillis()),MISSION_TYPE_USEAGE_DEVICE, MISSION_SUCCES);
+                unbindService(conn);
+            }
+        }
+    }
+
+    class providerThread extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            TCSIntent = new Intent(getApplicationContext(), TimeCheckerService.class);
+            while(dataInService.isWorking == 0){
+                try{
+                    bindService(TCSIntent, conn, Context.BIND_AUTO_CREATE);
+                    Calendar temp = Calendar.getInstance();
+                    timeCheckerService.setData((int)dataInService.finishTime, (int)(dataInService.setTime-temp.getTimeInMillis()),MISSION_TYPE_USEAGE_DEVICE, MISSION_ON_PROGRESS);
+                    unbindService(conn);
+                }catch (Exception e){break;}
             }
         }
     }

@@ -36,11 +36,17 @@ import kr.osam.pavlov.receiver.AlarmReceiver;
 import kr.osam.pavlov.receiver.ScreenOffReceiver;
 import kr.osam.pavlov.receiver.ScreenOnReceiver;
 
+import static kr.osam.pavlov.Missons.Mission.MISSION_FAILED;
+import static kr.osam.pavlov.Missons.Mission.MISSION_ON_PROGRESS;
+import static kr.osam.pavlov.Missons.Mission.MISSION_READY;
+import static kr.osam.pavlov.Missons.Mission.MISSION_SUCCES;
+import static kr.osam.pavlov.Missons.Mission.MISSION_TYPE_USEAGE_DEVICE;
+
 public class TimeCheckerActivity extends AppCompatActivity {
 
     String titleTCA = "TimeChecker";
     int serviceIDTCA = 1;
-    int isWorkingTCA = 0;
+    int isWorkingTCA = MISSION_READY;
     TimeCheckerJSON dataTCA;
 
     final static int THREAD_FINISH_TIME=0;
@@ -60,6 +66,8 @@ public class TimeCheckerActivity extends AppCompatActivity {
     WritingTimeHandler writingTimeHandler = null;
 
     ScreenReceiverService receiverBinderService = new ScreenReceiverService();
+    TimeCheckerService timeCheckerService = new TimeCheckerService();
+    Intent TCSIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,8 +176,6 @@ public class TimeCheckerActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-
     }
 
     public void onClickSetAlarm(View view){
@@ -238,9 +244,10 @@ public class TimeCheckerActivity extends AppCompatActivity {
 
                 Calendar temp = Calendar.getInstance();
                 dataTCA.startTime = temp.getTimeInMillis();
-                isWorkingTCA = 1;
+                dataTCA.isWorking = MISSION_ON_PROGRESS;
 
                 receiverBinderService.setData(dataTCA);
+
             }
         },
                 0,
@@ -310,133 +317,6 @@ public class TimeCheckerActivity extends AppCompatActivity {
     }
 
 
-
-    /*public class ScreenReceiver extends BroadcastReceiver {
-        long time = 0;
-        long presentOnTime = 0;
-        long presentOffTime = 0;
-        long durationOff = 0;
-        long durationOn = 0;
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d("test", "Custom Broadcast OnReceive");
-            //화면 켜짐/꺼짐, 미션 성공/실패 분기
-            if (ScreenOnReceiver.SCREEN_ON_NOTIFICATION.equals(intent.getAction())) {
-                //intent로 ScreenOn 정보 받기
-                presentOnTime = intent.getLongExtra("presentTime", 0 );
-
-                //저장된 사용시간 불러오기
-                SharedPreferences pref = getSharedPreferences("preference", MODE_PRIVATE);
-                if(time == 0) {
-                    time = pref.getLong("setTime", 0);
-                }
-                //화면 꺼져 있던 시간 구하기
-                if(presentOffTime != 0){
-                    durationOff = presentOnTime - presentOffTime;
-                }
-
-                //알람을 위한 Intent, PendingIntent 선언
-                Intent mAlarmIntent = new Intent("com.example.mission1.receiver.ALARM_ON");
-                mAlarmIntent.putExtra("flag","fail");
-                PendingIntent mPendingIntent =
-                        PendingIntent.getBroadcast(
-                                getApplicationContext(),
-                                0,
-                                mAlarmIntent,
-                                PendingIntent.FLAG_CANCEL_CURRENT
-                        );
-                //알람을 위한 AlarmManager 선언 및 설정
-                //기존 세팅시간 + 화면꺼진시간으로 알람시간 지연시켜서 재등록
-                mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mAlarmManager.set(
-                        AlarmManager.RTC_WAKEUP,
-                        time + durationOff,
-                        mPendingIntent
-                );
-                //세팅시간 변경(누적을 위해)
-                time = time + durationOff;
-
-                Calendar temp = Calendar.getInstance();
-                temp.setTimeInMillis(time);
-
-                Log.d("test", "여기오란ㅇㅁ롼이라인");
-                timeThread = new CheckingTimeThread(temp);
-                timeThread.start();
-
-
-            } else if (ScreenOffReceiver.SCREEN_OFF_NOTIFICATION.equals(intent.getAction())) {
-                //intent로 ScreenOff 정보 받기
-                presentOffTime = intent.getLongExtra("presentTime", 0 );
-                Log.d("test", intent.getStringExtra("name")+" offReceive");
-                //화면 켜져있던 시간 구하기
-                durationOn = presentOffTime - presentOnTime;
-
-                //알람을 위한 Intent, PendingIntent 선언
-                Intent mAlarmIntent = new Intent("com.example.mission1.receiver.ALARM_ON");
-                PendingIntent mPendingIntent =
-                        PendingIntent.getBroadcast(
-                                getApplicationContext(),
-                                0,
-                                mAlarmIntent,
-                                PendingIntent.FLAG_CANCEL_CURRENT
-                        );
-                //알람을 위한 AlarmManager 선언 및 설정
-                //화면이 꺼졌으므로 미션 실패 알람을 취소(꺼져있을 때는 미션을 실패할 수 없다)
-                mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mAlarmManager.cancel(mPendingIntent);
-                Log.d("test_off_cancel","alarm is canceled");
-                timeThread.interrupt();
-            }
-            else if (AlarmReceiver.MISSTION_FAIL_NOTIFICATION.equals(intent.getAction())){
-                //알람을 위한 Intent, PendingIntent 선언
-                Intent mAlarmIntent = new Intent("com.example.mission1.receiver.ALARM_ON");
-                mAlarmIntent.putExtra("flag","fail");
-                PendingIntent mPendingIntent =
-                        PendingIntent.getBroadcast(
-                                getApplicationContext(),
-                                1,
-                                mAlarmIntent,
-                                PendingIntent.FLAG_UPDATE_CURRENT
-                        );
-                //알람을 위한 AlarmManager 선언 및 설정
-                //성공 알람 취소
-                mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mAlarmManager.cancel(mPendingIntent);
-                try {
-                    stopThread(timeThread);
-                }catch(NullPointerException e){
-                    Log.d("test", "timeThread = null");
-                }
-                dataTCA.totalUsingTime = dataTCA.setTime;
-                isWorkingTCA = 3;
-            }
-            else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
-                textLeftTime.setText("0:0:0");
-                //알람을 위한 Intent, PendingIntent 선언
-                Intent mAlarmIntent = new Intent("com.example.mission1.receiver.ALARM_ON");
-                mAlarmIntent.putExtra("flag","fail");
-                PendingIntent mPendingIntent =
-                        PendingIntent.getBroadcast(
-                                getApplicationContext(),
-                                0,
-                                mAlarmIntent,
-                                PendingIntent.FLAG_UPDATE_CURRENT
-                        );
-                //알람을 위한 AlarmManager 선언 및 설정
-                //실패 알람 취소
-                mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mAlarmManager.cancel(mPendingIntent);
-                try {
-                    stopThread(timeThread);
-                } catch (NullPointerException e) {
-                    Log.d("test", "timeThread = null");
-                }
-                isWorkingTCA = 1;
-            }
-        }
-    }*/
-
-
     public class ScreenReceiver extends BroadcastReceiver {
         long time = 0;
         long presentOnTime = 0;
@@ -464,19 +344,31 @@ public class TimeCheckerActivity extends AppCompatActivity {
                 if(timeThread != null) {
                     timeThread.interrupt();
                 }
-
-
             }
             else if (AlarmReceiver.MISSTION_FAIL_NOTIFICATION.equals(intent.getAction())){
                 textLeftTime.setText("00:00:00");
                 timeThread.interrupt();
+
+                dataTCA.isWorking = MISSION_FAILED;
+
+                bindService(TCSIntent, TimeCheckerConn, Context.BIND_AUTO_CREATE);
+                Calendar temp = Calendar.getInstance();
+                timeCheckerService.setData((int)dataTCA.finishTime, (int)(dataTCA.setTime-temp.getTimeInMillis()),MISSION_TYPE_USEAGE_DEVICE, MISSION_FAILED);
+
+                unbindService(TimeCheckerConn);
             }
             else if (AlarmReceiver.MISSTION_SUCCESS_NOTIFICATION.equals(intent.getAction())){
                 timeThread.interrupt();
+
+                dataTCA.isWorking = MISSION_SUCCES;
+
+                bindService(TCSIntent, TimeCheckerConn, Context.BIND_AUTO_CREATE);
+                Calendar temp = Calendar.getInstance();
+                timeCheckerService.setData((int)dataTCA.finishTime, (int)(dataTCA.setTime-temp.getTimeInMillis()),MISSION_TYPE_USEAGE_DEVICE, MISSION_SUCCES);
+                unbindService(TimeCheckerConn);
             }
         }
     }
-
 
     class CheckingTimeThread extends Thread{
         //Handler handler;
@@ -485,11 +377,25 @@ public class TimeCheckerActivity extends AppCompatActivity {
             //this.handler = handler;
             this.cal = cal;
         }
+
         @Override
         public void run() {
             super.run();
+            TCSIntent = new Intent(getApplicationContext(), TimeCheckerService.class);
 
             while(cal.compareTo(Calendar.getInstance()) >= 0 ) {
+                bindService(TCSIntent, TimeCheckerConn, Context.BIND_AUTO_CREATE);
+                Log.d("test", "after binding");
+                timeCheckerService.printData();
+                Calendar temp = Calendar.getInstance();
+                timeCheckerService.setData((int)dataTCA.finishTime, (int)(dataTCA.setTime-temp.getTimeInMillis()),MISSION_TYPE_USEAGE_DEVICE, MISSION_ON_PROGRESS);
+                Log.d("test", "after setData");
+                timeCheckerService.printData();
+                Log.d("test","Activity Thread");
+                unbindService(TimeCheckerConn);
+                Log.d("test", "after unbinding");
+                timeCheckerService.printData();
+
                 Log.d("test", "Thread Running");
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("set",cal);
@@ -551,19 +457,32 @@ public class TimeCheckerActivity extends AppCompatActivity {
             Log.d("test", "serviceConnected");
             ScreenReceiverService.LocalBinder localBinder = (ScreenReceiverService.LocalBinder) service;
             receiverBinderService = localBinder.getService();
-            Log.d("test","setTime: "+receiverBinderService.getData().setTime);
+            try {
+                if (receiverBinderService.getData().setTime != 0) {
+                    dataTCA = receiverBinderService.getData();
+                    Log.d("test1", "onBind: " + dataTCA);
+                    Log.d("test", "bindService");
+                    unbindService(conn);
+                    Log.d("test", "unbindService");
+                    Calendar temp = Calendar.getInstance();
+                    temp.setTimeInMillis(dataTCA.setTime);
+                    timeThread = new CheckingTimeThread(temp);
+                    timeThread.start();
+                }
+            }catch(NullPointerException e){
+                Log.d("test", "onServiceConnected: receiverBinderService = null");}
+        }
 
-            if(receiverBinderService.getData().setTime != 0) {
-                dataTCA = receiverBinderService.getData();
-                Log.d("test1","onBind: "+dataTCA);
-                Log.d("test", "bindService");
-                unbindService(conn);
-                Log.d("test", "unbindService");
-                Calendar temp = Calendar.getInstance();
-                temp.setTimeInMillis(dataTCA.setTime);
-                timeThread = new CheckingTimeThread(temp);
-                timeThread.start();
-            }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d("test", "serviceDisconnected");
+        }
+    };
+    ServiceConnection TimeCheckerConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            TimeCheckerService.LocalBinder localBinder = (TimeCheckerService.LocalBinder) service;
+            timeCheckerService = localBinder.getService();
         }
 
         @Override
@@ -595,12 +514,8 @@ public class TimeCheckerActivity extends AppCompatActivity {
     class TransferJSONService extends Service{
         String title = "TimeChecker";
         int serviceID = 1;
-        int isWorking = isWorkingTCA;
+        int isWorking = dataTCA.isWorking;
         TimeCheckerJSON data = dataTCA;
-        public void refreshData(){
-            isWorking = isWorkingTCA;
-            data = dataTCA;
-        }
 
         IBinder binder = new LocalBinder();
         @Nullable

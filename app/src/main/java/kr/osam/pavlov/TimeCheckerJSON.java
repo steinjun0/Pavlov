@@ -5,6 +5,6 @@ public class TimeCheckerJSON extends JSONText {
     long setTime = 0;
     long finishTime = 0;
     long totalUsingTime = 0;
-    int isWorking = 2;
+    int isWorking = 0xff;
     int screenCount = 0;
 }
