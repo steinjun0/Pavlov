@@ -44,7 +44,7 @@ public class AppUseTimeCheckService extends Service {
         while (usageEvents.hasNextEvent()) {
             UsageEvents.Event event = new UsageEvents.Event();
             usageEvents.getNextEvent(event);
-            if (event.getEventType() == UsageEvents.Event.ACTIVITY_RESUMED) {
+            if (event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 packageName = event.getPackageName();
             }
         }

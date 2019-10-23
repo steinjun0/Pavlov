@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -15,13 +16,15 @@ public class PackageIconGridViewAdapter extends BaseAdapter
 {
     Context context;
     int layout;
-    private ArrayList<Drawable> icons = new ArrayList<Drawable>();
+    private ArrayList<Drawable> icons = new ArrayList<>();
+    private ArrayList<String> pkgLabels = new ArrayList<>();
 
-    public PackageIconGridViewAdapter(Context context, int layout, ArrayList<Drawable> icons)
+    public PackageIconGridViewAdapter(Context context, int layout, ArrayList<Drawable> icons, ArrayList<String> pkgLabels)
     {
         this.context = context;
         this.layout = layout;
         this.icons = icons;
+        this.pkgLabels = pkgLabels;
     }
 
     // Adapter에 사용되는 데이터의 개수를 리턴. : 필수 구현
@@ -45,12 +48,15 @@ public class PackageIconGridViewAdapter extends BaseAdapter
 
         // 화면에 표시될 View(Layout이 inflate된)으로부터 위젯에 대한 참조 획득
         ImageView iconImageView = convertView.findViewById(R.id.iv_pkgicon);
+        TextView labelTextView = convertView.findViewById(R.id.tv_pkglabel);
 
         // Data Set(missions)에서 position에 위치한 데이터 참조 획득
         Drawable listViewItem = icons.get(position);
+        String listTextItem = pkgLabels.get(position);
 
         // 아이템 내 각 위젯에 데이터 반영
         iconImageView.setImageDrawable(icons.get(position));
+        labelTextView.setText(pkgLabels.get(position));
 
 
         return convertView;
