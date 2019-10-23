@@ -3,6 +3,10 @@
     package="kr.osam.pavlov">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -12,23 +16,31 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".StepCounter"
+            android:name=".MissionManager"
             android:enabled="true"
             android:exported="false"></service>
+        <service
+            android:name=".GPSDistanceService"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".StepCounterService"
+            android:enabled="true"
+            android:exported="false" />
 
-        <activity android:name=".Gps_Meter_Activity"></activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity" />
+        <activity android:name=".Gps_Meter_Activity" />
+        <activity android:name=".StepCountingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyACYm2y0HwlPWaOEXxa4f8IO7xcOht67Wc" />
     </application>
-    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"></uses-permission>
 
 </manifest>
