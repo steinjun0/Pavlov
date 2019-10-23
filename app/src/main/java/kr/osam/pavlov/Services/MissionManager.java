@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.Services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -17,12 +17,12 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Calendar;
 import java.util.List;
 
-import kr.osam.pavlov.Missons.GpsCountMission;
 import kr.osam.pavlov.Missons.Mission;
 import kr.osam.pavlov.Missons.StepCountMisson;
+import kr.osam.pavlov.PavlovDBParser;
 
 import static android.util.Log.d;
 
@@ -42,7 +42,7 @@ public class MissionManager extends Service {
 
     @Override
     public void onCreate() {
-        missionList.addAll(dbManager.readMission());
+        //missionList.addAll(dbManager.readMission());
         isManagerRunning = false;
         super.onCreate();
     }
@@ -51,12 +51,19 @@ public class MissionManager extends Service {
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         //throw new UnsupportedOperationException("Not yet implemented");
+        Calendar tmp =  Calendar.getInstance();
+        tmp.set(2019,10,23,10,00);
+        missionList.add(new StepCountMisson("jip",0, 2000, 0, 0x4, tmp));
+        missionList.add(new StepCountMisson("gagosipda",0, 4000, 0, 0x4, tmp));
+
         WatcherThread thread = new WatcherThread();
+
+        isManagerRunning = true;
+
         initIntent();
-        thread.run();
+        thread.start();
 
         setServiceOnForeGround();
-        isManagerRunning = true;
 
         return new MissionManagerBinder();
     }
@@ -72,7 +79,7 @@ public class MissionManager extends Service {
 
     private boolean containMission(int _missiontype)
     {
-        for(Mission mission : missionList) { if(mission.getType() == _missiontype) return true; }
+        for(Mission mission : missionList) { if(mission.getType() == _missiontype) return true; Log.d("Test", " " + mission.getType()); }
         return false;
     }
     private void circuitBraker()
@@ -101,20 +108,19 @@ public class MissionManager extends Service {
         intentList.add(new Intent("TODO"));
         intentList.add(new Intent(this, GPSDistanceService.class));
         intentList.add(new Intent(this, StepCounterService.class));
+
+        for(int i = 0; i < 5; i++)
+        {
+            mConn.add(new manageConn());
+        }
     }
 
     class manageConn implements ServiceConnection{
         public IBinder m_service;
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service)
-        {
-            m_service = service;
-        }
+        public void onServiceConnected(ComponentName name, IBinder service) { m_service = service;}
         @Override
-        public void onServiceDisconnected(ComponentName name)
-        {
-            m_service = null;
-        }
+        public void onServiceDisconnected(ComponentName name) { m_service = null; }
     }
 
     class WatcherThread extends Thread
@@ -126,12 +132,17 @@ public class MissionManager extends Service {
                 try {
                     long tmpTime = SystemClock.currentThreadTimeMillis();
 
-                    //TODO:
-                    for( Mission curruntMission : missionList)
-                    {
-                        curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
-                    }
                     circuitBraker();
+
+                    //TODO:
+                    for(Mission curruntMission : missionList)
+                    {
+                        if(curruntMission.getCondition()==0)
+                        {
+                            curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
+                            Log.d("test","" +((StepCounterService.StepCounterBinder)mConn.get(curruntMission.getType()).m_service).getService().getSteps());
+                        }
+                    }
 
                     tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
                     sleep((100 - tmpTime)>0 ? (100 - tmpTime) : 0);

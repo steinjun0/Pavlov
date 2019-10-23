@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.Services;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -12,6 +12,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -26,6 +27,12 @@ public class StepCounterService extends Service {
     public StepCounterService() {
     }
 
+    StepCounterBinder stepCounterBinder = new StepCounterBinder();
+
+    public class StepCounterBinder extends Binder {
+        public StepCounterService getService() { return StepCounterService.this; }
+    }
+
     private int num;
 
     SensorManager sensorManager;
@@ -35,11 +42,6 @@ public class StepCounterService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
 
         setServiceOnForeGround();
 
@@ -49,7 +51,7 @@ public class StepCounterService extends Service {
         sensorManager.registerListener(listener,stepSensor,SensorManager.SENSOR_DELAY_GAME);
 
         Log.d("test", "StepCounter Service OnStart");
-        return super.onStartCommand(intent, flags, startId);
+        return stepCounterBinder;
     }
 
     @Override

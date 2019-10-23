@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.UIComponent;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,23 +7,20 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
+
 import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.List;
+
+import kr.osam.pavlov.R;
 
 
 /**************************************************************************************************
@@ -39,11 +36,6 @@ public class Gps_Meter_Activity extends AppCompatActivity {
     List<LatLng> coord = new ArrayList<LatLng>() {};
 
     int tmp;
-
-    private int Attached_id;
-    private double distance;
-    private int goal;
-    private String Title;
 
     String[] permission_list =
             {
@@ -128,17 +120,10 @@ public class Gps_Meter_Activity extends AppCompatActivity {
 
     public void requestEdit()
     {
-        Intent intent = new Intent("Edit-request");
-        intent.putExtra("Service-id", Attached_id);
-        intent.putExtra("Edit-goal", tmp);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         finish();
     }
     public void requestDelete()
     {
-        Intent intent = new Intent("Delete-request");
-        intent.putExtra("Service-id", Attached_id);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         finish();
     }
 

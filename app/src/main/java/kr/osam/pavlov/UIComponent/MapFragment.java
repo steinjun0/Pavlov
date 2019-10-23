@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.UIComponent;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,6 +17,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import kr.osam.pavlov.R;
 
 public class MapFragment extends Fragment
         implements

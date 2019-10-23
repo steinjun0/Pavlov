@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".Gps_Meter_Activity">
+    tools:context=".UIComponent.Gps_Meter_Activity">
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/map"
@@ -20,7 +20,7 @@
         android:layout_weight="3">
 
         <TextView
-            android:id="@+id/Title"
+            android:id="@+id/TitleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
@@ -41,7 +41,7 @@
             android:text="/"
             android:textSize="18sp"
             app:layout_constraintStart_toEndOf="@+id/StepCount"
-            app:layout_constraintTop_toBottomOf="@+id/Title" />
+            app:layout_constraintTop_toBottomOf="@+id/TitleText" />
 
         <TextView
             android:id="@+id/StepCount"
@@ -53,7 +53,7 @@
             android:text="TextView"
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Title" />
+            app:layout_constraintTop_toBottomOf="@+id/TitleText" />
 
         <TextView
             android:id="@+id/GoalCount"
@@ -65,7 +65,7 @@
             android:text="TextView"
             android:textSize="18sp"
             app:layout_constraintStart_toEndOf="@+id/Per"
-            app:layout_constraintTop_toBottomOf="@+id/Title" />
+            app:layout_constraintTop_toBottomOf="@+id/TitleText" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>

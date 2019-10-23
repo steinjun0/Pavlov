@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.UIComponent;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,27 +8,29 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
+
+import kr.osam.pavlov.Missons.Mission;
+import kr.osam.pavlov.R;
+import kr.osam.pavlov.Services.MissionManager;
 
 public class StepCountingActivity extends AppCompatActivity {
 
-
-    private int Attached_id;
-    private int goal;
     int tmp;
     int step;
-
     TextView stepText;
-    Intent step_service_intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,8 +39,10 @@ public class StepCountingActivity extends AppCompatActivity {
 
         stepText = findViewById(R.id.StepText);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                LocalReceiver, new IntentFilter("Step-received"));
+        mConn conn = new mConn();
+
+        Intent intent = new Intent(this,MissionManager.class);
+        bindService(intent,conn,BIND_AUTO_CREATE);
     }
 
     @Override
@@ -100,16 +104,17 @@ public class StepCountingActivity extends AppCompatActivity {
 
     public void requestEdit()
     {
-        Intent intent = new Intent("Edit-request");
-        intent.putExtra("Service-id", Attached_id);
-        intent.putExtra("Edit-goal", tmp);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         finish();
     }
     public void requestDelete() {
-        Intent intent = new Intent("Delete-request");
-        intent.putExtra("Service-id", Attached_id);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         finish();
+    }
+
+    class mConn implements ServiceConnection
+    {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) { Log.d("Test", "Service Bind"); }
+        @Override
+        public void onServiceDisconnected(ComponentName name) { }
     }
 }

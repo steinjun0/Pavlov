@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.Services;
 
 import android.Manifest;
 import android.app.Notification;
@@ -18,6 +18,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -43,9 +44,14 @@ public class GPSDistanceService extends Service {
     public GPSDistanceService() {
     }
 
-    private double distance;
     private Location loc_now;
-    private Location loc_prev;
+
+    GPSDistanceBinder gpsDistanceBinder = new GPSDistanceBinder();
+
+    public class GPSDistanceBinder extends Binder
+    {
+        public GPSDistanceService getService() { return GPSDistanceService.this; }
+    }
 
     LocationManager locman;
     getLocationListener locationListener;
@@ -54,7 +60,6 @@ public class GPSDistanceService extends Service {
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
 
-        distance = 0;
         setServiceOnForeGround();
 
         locman = (LocationManager)getSystemService(LOCATION_SERVICE);
@@ -75,12 +80,7 @@ public class GPSDistanceService extends Service {
         }
 
         Log.d("Test", "Service started");
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+        return gpsDistanceBinder;
     }
 
     @Override
@@ -95,10 +95,7 @@ public class GPSDistanceService extends Service {
         @Override
         public void onLocationChanged(Location location) {
 
-            loc_prev = loc_now;
             loc_now = location;
-
-            distance = loc_now.distanceTo(loc_prev);
         }
         @Override public void onProviderDisabled(String s) { }
         @Override public void onProviderEnabled(String s) { }
@@ -137,5 +134,4 @@ public class GPSDistanceService extends Service {
     }
 
     public Location getLoctaion() { return loc_now; }
-    public double getDistance() { return distance; }
 }

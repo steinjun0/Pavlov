@@ -16,21 +16,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".MissionManager"
+            android:name=".Services.MissionManager"
             android:enabled="true"
             android:exported="false"></service>
         <service
-            android:name=".GPSDistanceService"
+            android:name=".Services.GPSDistanceService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".StepCounterService"
+            android:name=".Services.StepCounterService"
             android:enabled="true"
             android:exported="false" />
 
         <activity android:name=".MainActivity" />
-        <activity android:name=".Gps_Meter_Activity" />
-        <activity android:name=".StepCountingActivity">
+        <activity android:name=".UIComponent.Gps_Meter_Activity" />
+        <activity android:name=".UIComponent.StepCountingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
