@@ -4,16 +4,18 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.app.usage.UsageStats;
-import android.app.usage.UsageStatsManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.os.IBinder;
+import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -21,12 +23,28 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
     List<ApplicationInfo> packages;
-    ArrayList<AppUseTimeCheckService> appUseTimeCheckServices = new ArrayList<>();
+    AppUseTimeCheckService appUseTimeCheckService;
+
+    TextView tv = findViewById(R.id.tv_appusetime);
+
+    ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            //서비스와 연결되었을 때 호출되는 메서드
+            Log.d("appUseTimeService", "Binding Connected");
+            AppUseTimeCheckService.AppUseBinder appUseBinder = (AppUseTimeCheckService.AppUseBinder) service;
+            appUseTimeCheckService = appUseBinder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d("appUseTimeService", "Binding Disconnected");
+        }
+    };
 
     //어플리케이션을 선택하는 다이얼로그 생성 메소드
     private void showAlertDialog(ArrayList<Drawable> icons, final Context context) {
@@ -42,12 +60,12 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 //서비스 생성
-                appUseTimeCheckServices.add(new AppUseTimeCheckService(packages.get(position).packageName, 0));
+
 
                 //새로운 다이얼로그 출력
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 TextView dialogTv = new TextView(context);
-                dialogTv.setText(String.valueOf(appUseTimeCheckServices.get(0).getUsedTime()));
+                //dialogTv.setText(String.valueOf(appUseTimeCheckService.getUsedTime(packages.get(position).packageName)));
                 builder.setView(dialogTv);
                 builder.setTitle(packages.get(position).packageName);
                 builder.show();
@@ -91,6 +109,7 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
 
 
+
         //////////////////////
 
         final PackageManager pm = getPackageManager();
@@ -101,17 +120,17 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
         if(Build.VERSION.SDK_INT >= 21)
         {
-            startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), 1);
+            //startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), 1);
 
             //오늘 사용한 패키지들의 사용 시간
-            UsageStatsManager mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
+            /*UsageStatsManager mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
             Map<String, UsageStats> lUsageStatsMap = mUsageStatsManager.
                     queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
 
             //사용 시간 정보 보여주기, 디버그용
-            String temp = "";
+            String temp = String.valueOf(lUsageStatsMap.get("kr.osam.pavlov").getTotalTimeInForeground()/1000);*/
 
-            for (ApplicationInfo packageInfo : packages) {
+            /*for (ApplicationInfo packageInfo : installedPackages) {
                 String packageName = packageInfo.packageName;
                 long packageUsedTime = 0;
                 if(lUsageStatsMap.containsKey(packageName))
@@ -129,19 +148,38 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
                 {
                     e.printStackTrace();
                 }
-            }
+            }*/
 
-            TextView tv = findViewById(R.id.tv_appusetime);
-            tv.setText(temp);
+            //appUseTimeCheckService = new AppUseTimeCheckService();
+
+            Intent service_intent = new Intent(this, AppUseTimeCheckService.class);
+            bindService(service_intent, serviceConnection, this.BIND_AUTO_CREATE);
+            Log.d("customService", "//////////after appUseTimeCheckService");
+
+            //String name = appUseTimeCheckService.getPackageName();//서비스쪽 메소드로 값 전달 받아 호출
+
+            //String temp = String.valueOf(appUseTimeCheckService.getUsedTime());
+
+            //tv.setText(temp);
+            Log.d("customService", "//////////before appUseTimeCheckService");
+
 
             //앱 선택 창 띄워주기
-            showAlertDialog(icons, this);
+            //showAlertDialog(icons, this);
         }
         else
         {
 
         }
 
+    }
+
+    @Override
+    public void onDestroy() {
+
+        unbindService(serviceConnection);
+
+        super.onDestroy();
     }
 }
 
