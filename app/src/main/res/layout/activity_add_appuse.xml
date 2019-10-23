@@ -4,13 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AppSelectActivity">
+    tools:context=".AddAppUsageMissionActivity">
 
-    <GridView
-        android:id="@+id/gv_appselect"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
 
-    </GridView>
 
 </LinearLayout>

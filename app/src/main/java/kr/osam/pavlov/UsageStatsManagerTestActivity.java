@@ -14,7 +14,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -30,6 +29,8 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
     AppUseTimeCheckService appUseTimeCheckService;
 
     TextView tv = findViewById(R.id.tv_appusetime);
+
+
 
     ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -123,19 +124,19 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
             //startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), 1);
 
             //오늘 사용한 패키지들의 사용 시간
-            /*UsageStatsManager mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
-            Map<String, UsageStats> lUsageStatsMap = mUsageStatsManager.
+            /*UsageStatsManager usageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
+            Map<String, UsageStats> usageStatsMap = usageStatsManager.
                     queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
 
             //사용 시간 정보 보여주기, 디버그용
-            String temp = String.valueOf(lUsageStatsMap.get("kr.osam.pavlov").getTotalTimeInForeground()/1000);*/
+            String temp = String.valueOf(usageStatsMap.get("kr.osam.pavlov").getTotalTimeInForeground()/1000);*/
 
             /*for (ApplicationInfo packageInfo : installedPackages) {
                 String packageName = packageInfo.packageName;
                 long packageUsedTime = 0;
-                if(lUsageStatsMap.containsKey(packageName))
+                if(usageStatsMap.containsKey(packageName))
                 {
-                    packageUsedTime = lUsageStatsMap.get(packageInfo.packageName).getTotalTimeInForeground()/1000;
+                    packageUsedTime = usageStatsMap.get(packageInfo.packageName).getTotalTimeInForeground()/1000;
                 }
 
                 temp += packageName + ": " + packageUsedTime + " 초\n";
