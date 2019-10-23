@@ -65,79 +65,6 @@ public class AppUseTimeCheckService extends Service {
         thread.start();
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        // 서비스가 종료될 때 실행
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    /*private boolean updateAppUseTime()
-    {
-        if(Build.VERSION.SDK_INT < 21)
-        {
-            return false;
-        }
-        //오늘 사용한 어플리케이션들의 데이터
-        usageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
-        usageStatsMap = usageStatsManager.queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
-        Log.d("ServiceLoop", String.valueOf(usageStatsMap.get("kr.osam.pavlov").getTotalTimeInForeground()));
-        return true;
-    }*/
-
-    public class AppUseBinder extends Binder{
-
-        public AppUseTimeCheckService getService(){    return AppUseTimeCheckService.this;  }
-
-        /*public Map<String, Long> getCheckTarget()
-        {
-            return checkTargetData;
-        }
-        public void addCheckTarget(String pkgName, long limitTime)
-        {
-            checkTargetData.put(pkgName, limitTime);
-        }*/
-    }
-
-    /*public long getUsedTime(String pkgName)
-    {
-        if(Build.VERSION.SDK_INT < 21)
-        {
-            return -1;
-        }
-        long time = usageStatsMap.get(pkgName).getTotalTimeInForeground();
-
-        return time;
-    }*/
-
-    public int getTime(String pkgName)
-    {
-        //패키지 이름을 패러미터로 전달하면 해당 패키지의 사용 시간을 반환합니다.
-        //안드로이드 버전이 낮아 사용할 수 없으면 -1, 해당 패키지가 실행기록에 없으면 -2를 반환합니다.
-
-        int time = -1;
-        if(Build.VERSION.SDK_INT > 20)
-        {
-            if(usageStatsMap.containsKey(pkgName))
-                time = (int) usageStatsMap.get(pkgName).getTotalTimeInForeground();
-            else
-                time = -2;
-        }
-
-
-        return time;
-    }
-
     class UpdateAppUseTime extends Thread {
 
         public void run(){
@@ -174,4 +101,47 @@ public class AppUseTimeCheckService extends Service {
         }
 
     }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // 서비스가 종료될 때 실행
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    public class AppUseBinder extends Binder{
+
+        public AppUseTimeCheckService getService(){    return AppUseTimeCheckService.this;  }
+
+    }
+
+    public int getTime(String pkgName)
+    {
+        //패키지 이름을 패러미터로 전달하면 해당 패키지의 사용 시간을 반환합니다.
+        //안드로이드 버전이 낮아 사용할 수 없으면 -1, 해당 패키지가 실행기록에 없으면 -2를 반환합니다.
+
+        int time = -1;
+        if(Build.VERSION.SDK_INT > 20)
+        {
+            if(usageStatsMap.containsKey(pkgName))
+                time = (int) usageStatsMap.get(pkgName).getTotalTimeInForeground();
+            else
+                time = -2;
+        }
+
+
+        return time;
+    }
+
+
 }
