@@ -1,56 +1,69 @@
 package kr.osam.pavlov;
 
 import android.app.Service;
+import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
-//모든 어플리케이션의 현황을 List로 저장해 둔다 -> 설치된 어플리케이션이 변동되면? 업데이트 버튼 등을 통해 새로 받아오기
-//검사할 어플리케이션의 패키지 이름을 List로 저장해 둔다
-//검사할 어플리케이션의 사용 제한수치를 저장한다
-
-//1분마다 어플리케이션의 사용 현황을 받아온다
-// 어플리케이션을 검사하고 사용량을 브리핑한다
 public class AppUseTimeCheckService extends Service {
 
-    UsageStatsManager mUsageStatsManager;
-    Map<String, UsageStats> lUsageStatsMap;
-    Map<String, Long> checkTargetData;
+    /*
+    모든 어플리케이션의 사용 시간을 확인하는 서비스입니다.
+    .getTime(String pkgName) 메서드로 해당 패키지의 사용 시간을 int형으로 반환받을 수 있습니다.
+     */
+
+    UsageStatsManager usageStatsManager;
+    Map<String, UsageStats> usageStatsMap;
+    String tempPkgName = "kr.osam.pavlov";
+    long tempPkgUseTime;
+
+    UpdateAppUseTime thread;
 
     IBinder mBinder =  new AppUseBinder();
+
+
+
+    private String recentlyUsedPkgName() {
+
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
+            return null;
+        }
+        String packageName = "";
+        long endTime = System.currentTimeMillis();
+        long beginTime = endTime - 10000;
+
+        final UsageEvents usageEvents = usageStatsManager.queryEvents(beginTime, endTime);
+        while (usageEvents.hasNextEvent()) {
+            UsageEvents.Event event = new UsageEvents.Event();
+            usageEvents.getNextEvent(event);
+            if (event.getEventType() == UsageEvents.Event.ACTIVITY_RESUMED) {
+                packageName = event.getPackageName();
+            }
+        }
+        return packageName;
+    }
 
 
 
     @Override
     public void onCreate() {
         super.onCreate();
-        //UsageStatsManager 생성
-        if(Build.VERSION.SDK_INT >= 21)
-        {
+        //1초마다 앱 사용시간 업데이트
+        if(Build.VERSION.SDK_INT < 21)
+            return;
+        usageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
 
-        }
-        //1분마다 앱 사용시간 업데이트
-        Timer timer = new Timer();
-        //timer.schedule(timerTask, 0, 60000);
-        timer.schedule(timerTask, 0, 1000);
+        thread  = new UpdateAppUseTime();
+        thread.start();
     }
-    TimerTask timerTask = new TimerTask() {
-        @Override
-        public void run() {
-            updateAppUseTime();
-        }
-    };
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -65,21 +78,22 @@ public class AppUseTimeCheckService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private boolean updateAppUseTime()
+    /*private boolean updateAppUseTime()
     {
         if(Build.VERSION.SDK_INT < 21)
         {
             return false;
         }
         //오늘 사용한 어플리케이션들의 데이터
-        mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
-        lUsageStatsMap = mUsageStatsManager.queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
-        Log.d("ServiceLoop", String.valueOf(lUsageStatsMap.get("kr.osam.pavlov").getTotalTimeInForeground()));
+        usageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
+        usageStatsMap = usageStatsManager.queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
+        Log.d("ServiceLoop", String.valueOf(usageStatsMap.get("kr.osam.pavlov").getTotalTimeInForeground()));
         return true;
-    }
+    }*/
 
     public class AppUseBinder extends Binder{
 
@@ -101,13 +115,63 @@ public class AppUseTimeCheckService extends Service {
         {
             return -1;
         }
-        long time = lUsageStatsMap.get(pkgName).getTotalTimeInForeground();
+        long time = usageStatsMap.get(pkgName).getTotalTimeInForeground();
 
         return time;
     }*/
 
-    public Map<String, UsageStats> getlUsageStatsMap()
+    public int getTime(String pkgName)
     {
-        return lUsageStatsMap;
+        //패키지 이름을 패러미터로 전달하면 해당 패키지의 사용 시간을 반환합니다.
+        //안드로이드 버전이 낮아 사용할 수 없으면 -1, 해당 패키지가 실행기록에 없으면 -2를 반환합니다.
+
+        int time = -1;
+        if(Build.VERSION.SDK_INT > 20)
+        {
+            if(usageStatsMap.containsKey(pkgName))
+                time = (int) usageStatsMap.get(pkgName).getTotalTimeInForeground();
+            else
+                time = -2;
+        }
+
+
+        return time;
+    }
+
+    class UpdateAppUseTime extends Thread {
+
+        public void run(){
+            while (true) {
+
+                if(Build.VERSION.SDK_INT < 21)
+                {
+                    return;
+                }
+                //오늘 사용한 어플리케이션들의 데이터
+
+                usageStatsMap = usageStatsManager.queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
+
+                String temp = recentlyUsedPkgName();
+                Log.d("ServiceLoop", tempPkgName);
+                Log.d("ServiceLoop", String.valueOf(usageStatsMap.get(tempPkgName).getTotalTimeInForeground() + tempPkgUseTime));
+
+                if(temp == "" || temp.equals(tempPkgName))
+                {
+                    tempPkgUseTime += 1000;
+                }
+                else
+                {
+                    tempPkgName = temp;
+                    tempPkgUseTime = 1000;
+                }
+
+                try{
+                    Thread.sleep(1000);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 }
