@@ -22,7 +22,6 @@ public class PackageIconGridViewAdapter extends BaseAdapter
         this.context = context;
         this.layout = layout;
         this.icons = icons;
-
     }
 
     // Adapter에 사용되는 데이터의 개수를 리턴. : 필수 구현
@@ -69,10 +68,10 @@ public class PackageIconGridViewAdapter extends BaseAdapter
         return icons.get(position) ;
     }
 
-    // 아이템 데이터 추가를 위한 함수. 개발자가 원하는대로 작성 가능.
-    public void addItem(Drawable icon) {
+    // 아이템 데이터 추가를 위한 함수
+    /*public void addItem(Drawable icon) {
         Drawable item = icon;
 
         icons.add(item);
-    }
+    }*/
 }

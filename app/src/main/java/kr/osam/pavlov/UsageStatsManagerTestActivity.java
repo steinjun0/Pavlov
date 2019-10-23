@@ -4,7 +4,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
@@ -17,19 +16,19 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class UsageStatsManagerTestActivity extends AppCompatActivity {
 
     List<ApplicationInfo> packages;
+    ArrayList<AppUseTimeCheckService> appUseTimeCheckServices = new ArrayList<>();
+
+    //어플리케이션을 선택하는 다이얼로그 생성 메소드
     private void showAlertDialog(ArrayList<Drawable> icons, final Context context) {
 
         // Prepare grid view
@@ -41,9 +40,14 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                //서비스 생성
+                appUseTimeCheckServices.add(new AppUseTimeCheckService(packages.get(position).packageName, 0));
+
+                //새로운 다이얼로그 출력
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 TextView dialogTv = new TextView(context);
-                dialogTv.setText("사용 시간을 검사할 어플리케이션을 골라주세요");
+                dialogTv.setText(String.valueOf(appUseTimeCheckServices.get(0).getUsedTime()));
                 builder.setView(dialogTv);
                 builder.setTitle(packages.get(position).packageName);
                 builder.show();
@@ -57,6 +61,7 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         builder.show();
     }
 
+    //PACKAGE_USAGE_STATS권한을 갖고 있는지 체크
     public int checkPermissions()
     {
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
@@ -73,7 +78,76 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
         return 0;
     }
 
-    private String getForegroundPackageName() {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_usage_stats_manager_test);
+
+        //////////////////////
+        //나중에 지울 놈들
+        //서비스 관련 테스트용
+
+
+
+
+        //////////////////////
+
+        final PackageManager pm = getPackageManager();
+
+        //설치된 패키지들의 리스트
+        packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        ArrayList<Drawable> icons = new ArrayList<Drawable>();
+
+        if(Build.VERSION.SDK_INT >= 21)
+        {
+            startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), 1);
+
+            //오늘 사용한 패키지들의 사용 시간
+            UsageStatsManager mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
+            Map<String, UsageStats> lUsageStatsMap = mUsageStatsManager.
+                    queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
+
+            //사용 시간 정보 보여주기, 디버그용
+            String temp = "";
+
+            for (ApplicationInfo packageInfo : packages) {
+                String packageName = packageInfo.packageName;
+                long packageUsedTime = 0;
+                if(lUsageStatsMap.containsKey(packageName))
+                {
+                    packageUsedTime = lUsageStatsMap.get(packageInfo.packageName).getTotalTimeInForeground()/1000;
+                }
+
+                temp += packageName + ": " + packageUsedTime + " 초\n";
+
+                try
+                {
+                    icons.add(getPackageManager().getApplicationIcon(packageName));
+                }
+                catch (PackageManager.NameNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            TextView tv = findViewById(R.id.tv_appusetime);
+            tv.setText(temp);
+
+            //앱 선택 창 띄워주기
+            showAlertDialog(icons, this);
+        }
+        else
+        {
+
+        }
+
+    }
+}
+
+
+//실행되고 있는 패키지 이름 가져오기
+    /*private String getForegroundPackageName() {
 
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
             return null;
@@ -99,89 +173,4 @@ public class UsageStatsManagerTestActivity extends AppCompatActivity {
             }
         }
         return packageName;
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_usage_stats_manager_test);
-
-        final PackageManager pm = getPackageManager();
-
-        //설치된 패키지들의 리스트
-        packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        ArrayList<Drawable> icons = new ArrayList<Drawable>();
-        /*try
-        {
-            Drawable icon = getPackageManager().getApplicationIcon("com.egert.piano");
-            ImageView iv = findViewById(R.id.iv_applist);
-            iv.setImageDrawable(icon);
-        }
-        catch (PackageManager.NameNotFoundException e)
-        {
-            e.printStackTrace();
-        }*/
-
-
-
-        if(Build.VERSION.SDK_INT >= 21)
-        {
-            startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), 1);
-
-
-            UsageStatsManager mUsageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
-            Map<String, UsageStats> lUsageStatsMap = mUsageStatsManager.
-                    queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
-
-        /*long totalTimeUsageInMillis = lUsageStatsMap.get("kr.osam.pavlov").
-                getTotalTimeInForeground();*/
-
-            //String temp = String.valueOf(totalTimeUsageInMillis);
-
-            //Iterator<String> iterator = lUsageStatsMap.keySet().iterator();
-            //Iterator<ResolveInfo> listIterator = pkgAppsList.listIterator();
-
-            String temp = "";
-
-            for (ApplicationInfo packageInfo : packages) {
-                String packageName = packageInfo.packageName;
-                long packageUsedTime = 0;
-                if(lUsageStatsMap.containsKey(packageName))
-                {
-                    packageUsedTime = lUsageStatsMap.get(packageInfo.packageName).getTotalTimeInForeground()/1000;
-                }
-
-                temp += packageName + ": " + packageUsedTime + " 초\n";
-
-                try
-                {
-                    icons.add(getPackageManager().getApplicationIcon(packageName));
-                }
-                catch (PackageManager.NameNotFoundException e)
-                {
-                    e.printStackTrace();
-                }
-
-                //Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
-                //Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
-            }
-            /*while(listIterator.hasNext()) {
-                String pkgName = listIterator.next().resolvePackageName;
-                temp += pkgName + ": " + lUsageStatsMap.get(pkgName).getTotalTimeInForeground()/1000 + " 초\n";
-            }*/
-
-
-
-
-            TextView tv = findViewById(R.id.tv_appusetime);
-            tv.setText(temp);
-
-            showAlertDialog(icons, this);
-        }
-        else
-        {
-
-        }
-
-    }
-}
+    }*/
