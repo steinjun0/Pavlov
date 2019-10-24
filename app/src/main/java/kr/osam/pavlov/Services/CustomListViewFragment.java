@@ -30,14 +30,13 @@ public class CustomListViewFragment extends Fragment {
     boolean isRunning;
     MissionListAdapter adapter;
     UpdaterThread thread;
+    MainActivity activity;
 
-    public CustomListViewFragment() {
-        // Required empty public constructor
-    }
+    public CustomListViewFragment() {// Required empty public constructor
+        }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
     }
 
@@ -45,15 +44,20 @@ public class CustomListViewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-       missionListView = getView().findViewById(R.id.MissionListView);
-       missionListView.setAdapter(adapter);
-       isRunning = true;
+        thread = new UpdaterThread();
+        thread.start();
 
-       adapter = new MissionListAdapter();
-       thread = new UpdaterThread();
-       thread.start();
+        missionListView = getView().findViewById(R.id.MissionListView);
+        missionListView.setAdapter(adapter);
+        isRunning = true;
 
-       // Inflate the layout for this fragment
+        activity = (MainActivity)getActivity();
+
+        adapter = new MissionListAdapter();
+
+
+
+        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_custom_list_view, container, false);
     }
 
@@ -71,17 +75,18 @@ public class CustomListViewFragment extends Fragment {
                 try {
                     long tmpTime = SystemClock.currentThreadTimeMillis();
 
-                    adapter.CopyMissionsList(((MainActivity)getActivity()).getService().missionList);
+                    Log.d("Test", "씨이바아아아");
 
-                    ((MainActivity)getActivity()).unbind();
+                    adapter.CopyMissionsList(activity.getService().missionList);
 
-                    runOnUiThread(new Runnable() {
+                    activity.unbind();
+
+                    activity.runOnUiThread(new Runnable(){
                         @Override
                         public void run() {
                             adapter.notifyDataSetChanged();
                         }
                     });
-
 
                     tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
                     sleep((250 - tmpTime)>0 ? (250 - tmpTime) : 0);

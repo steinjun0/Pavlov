@@ -37,16 +37,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         conn = new MainActivity.masterConn();
-        intent = new Intent(this, MissionManager.class);
 
         frag = new CustomListViewFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.FragmentContents, frag).commitAllowingStateLoss();
 
-        FragmentManager manager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = manager.beginTransaction();
-        fragmentTransaction.replace(R.id.FragmentContents, frag);
-        fragmentTransaction.commitAllowingStateLoss();
-
-
+        intent = new Intent(this, MissionManager.class);
         startService(intent);
 
         super.onCreate(savedInstanceState);

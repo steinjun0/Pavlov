@@ -107,6 +107,8 @@ public class MissionManager extends Service {
                         }
                     }
 
+
+
                     unsetBind();
 
                     tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
