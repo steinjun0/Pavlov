@@ -2,12 +2,14 @@ package kr.osam.pavlov.Services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -20,11 +22,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import kr.osam.pavlov.Missons.GpsCountMission;
 import kr.osam.pavlov.Missons.Mission;
 import kr.osam.pavlov.Missons.StepCountMisson;
 import kr.osam.pavlov.PavlovDBParser;
-
-import static android.util.Log.d;
 
 public class MissionManager extends Service {
 
@@ -34,6 +35,12 @@ public class MissionManager extends Service {
     private List<manageConn> mConn = new ArrayList<>(Mission.MISSION_NUM_OF_MISSION_TYPE);
 
     boolean isManagerRunning;
+
+    public class MissionManagerBinder extends Binder{
+        public MissionManager getService() { return MissionManager.this; }
+    }
+
+    MissionManagerBinder binder;
 
     PavlovDBParser dbManager = new PavlovDBParser(this);
 
@@ -48,15 +55,18 @@ public class MissionManager extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
         //throw new UnsupportedOperationException("Not yet implemented");
         Calendar tmp =  Calendar.getInstance();
-        tmp.set(2019,10,23,10,00);
-        missionList.add(new StepCountMisson("jip",0, 2000, 0, 0x4, tmp));
-        missionList.add(new StepCountMisson("gagosipda",0, 4000, 0, 0x4, tmp));
+        tmp.set(2019,9,24,6,24);
+
+        missionList.add(new StepCountMisson("집에",0, 50, 0, tmp));
+        missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location> ()));
+        missionList.add(new StepCountMisson("싶다",0, 20000, 0, tmp));
 
         WatcherThread thread = new WatcherThread();
+        binder = new MissionManagerBinder();
 
         isManagerRunning = true;
 
@@ -65,41 +75,50 @@ public class MissionManager extends Service {
 
         setServiceOnForeGround();
 
-        return new MissionManagerBinder();
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
-    public void onDestroy() {
-        isManagerRunning=false;
-        removeServiceOnForeground();
-        super.onDestroy();
+    public IBinder onBind(Intent intent) {
+
+        return binder;
     }
 
-    public void addMission(Mission _mission) { missionList.add(_mission); }
+    class WatcherThread extends Thread
+    {
+        @Override
+        public void run() {
+            while (isManagerRunning)
+            {
+                try {
+                    long tmpTime = SystemClock.currentThreadTimeMillis();
 
-    private boolean containMission(int _missiontype)
-    {
-        for(Mission mission : missionList) { if(mission.getType() == _missiontype) return true; Log.d("Test", " " + mission.getType()); }
-        return false;
-    }
-    private void circuitBraker()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) && mConn.get(missiontype).m_service==null )
-            {
-                bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_AUTO_CREATE);
+                    circuitBraker();
+                    setBind();
+
+
+
+                    for(Mission curruntMission : missionList)
+                    {
+                        if(curruntMission.getCondition()==0)
+                        {
+                            curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
+                        }
+                    }
+
+                    unsetBind();
+
+                    tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
+                    sleep((50 - tmpTime)>0 ? (50 - tmpTime) : 0);
+                } catch (Exception e) { Log.d("CatchExeption", e.toString()); }
             }
-            if( !containMission(missiontype) && mConn.get(missiontype).m_service!=null )
-            {
-                unbindService(mConn.get(missiontype));
-            }
+            removeServiceOnForeground();
+
+            super.run();
         }
     }
 
-    class MissionManagerBinder extends Binder{
-        MissionManager getService() { return MissionManager.this; }
-    }
+    public void addMission(Mission _mission) { missionList.add(_mission); }
 
     private void initIntent()
     {
@@ -123,36 +142,54 @@ public class MissionManager extends Service {
         public void onServiceDisconnected(ComponentName name) { m_service = null; }
     }
 
-    class WatcherThread extends Thread
+    private boolean containMission(int _missiontype)
     {
-        @Override
-        public void run() {
-            while (isManagerRunning)
-            {
-                try {
-                    long tmpTime = SystemClock.currentThreadTimeMillis();
-
-                    circuitBraker();
-
-                    //TODO:
-                    for(Mission curruntMission : missionList)
-                    {
-                        if(curruntMission.getCondition()==0)
-                        {
-                            curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
-                            Log.d("test","" +((StepCounterService.StepCounterBinder)mConn.get(curruntMission.getType()).m_service).getService().getSteps());
-                        }
-                    }
-
-                    tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
-                    sleep((100 - tmpTime)>0 ? (100 - tmpTime) : 0);
-                } catch (Exception e) { Log.d("CatchExeption", e.toString()); }
-            }
-
-            removeServiceOnForeground();
-
-            super.run();
+        for(Mission mission : missionList)
+        {
+            if(mission.getType() == _missiontype
+                    && mission.getCondition() == Mission.MISSION_ON_PROGRESS) return true;
         }
+        return false;
+    }
+    private void circuitBraker()
+    {
+        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
+        {
+            if( containMission(missiontype) && mConn.get(missiontype).m_service==null )
+            {
+                Log.d("Missions", missiontype + "st Mission Service is On." );
+                startService(intentList.get(missiontype));
+                //bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_AUTO_CREATE);
+            }
+            if( (!containMission(missiontype)) && mConn.get(missiontype).m_service!=null )
+            {
+                Log.d("Missions", missiontype + "st Mission Service is Off." );
+                stopService(intentList.get(missiontype));
+                //unbindService(mConn.get(missiontype));
+            }
+        }
+    }
+
+    private void setBind()
+    {
+        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
+        {
+            if( containMission(missiontype) )
+            {
+                bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_ABOVE_CLIENT);
+            }
+        }
+    }
+    private void unsetBind()
+    {
+        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
+        {
+            if( containMission(missiontype) )
+            {
+                unbindService(mConn.get(missiontype));
+            }
+        }
+
     }
 
     private void setServiceOnForeGround()
@@ -160,7 +197,8 @@ public class MissionManager extends Service {
         // 안드로이드 8.0 이상이면 노티피케이션 메시지를 띄우고 포그라운드 서비스로 운영한다.
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel channel = new NotificationChannel("Pavlov", "Pavlov", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel = new NotificationChannel("Pavlov", "Pavlov", NotificationManager.IMPORTANCE_DEFAULT);
+
             channel.enableLights(true);
             channel.setLightColor(Color.RED);
             channel.enableVibration(true);
@@ -173,15 +211,24 @@ public class MissionManager extends Service {
             builder.setAutoCancel(true);
             Notification notification = builder.build();
             // 현재 노티피케이션 메시즈를 포그라운드 서비스의 메시지로 등록한다.
-            startForeground(0x00, notification);
+            startForeground(0xFF, notification);
         }
     }
+
     private void removeServiceOnForeground()
     {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            manager.cancel(0x00);
+            manager.cancel(0xFF);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        isManagerRunning=false;
+        SystemClock.sleep(150);
+        removeServiceOnForeground();
+        super.onDestroy();
     }
 }

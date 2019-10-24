@@ -1,6 +1,7 @@
 package kr.osam.pavlov.Services;
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -18,6 +19,8 @@ import android.os.IBinder;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import kr.osam.pavlov.Missons.Mission;
 
 /**************************************************
 
@@ -48,9 +51,7 @@ public class StepCounterService extends Service {
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         listener = new StepSensorListener();
-        sensorManager.registerListener(listener,stepSensor,SensorManager.SENSOR_DELAY_GAME);
-
-        Log.d("test", "StepCounter Service OnStart");
+        sensorManager.registerListener(listener,stepSensor,SensorManager.SENSOR_DELAY_UI);
         return stepCounterBinder;
     }
 
@@ -80,7 +81,8 @@ public class StepCounterService extends Service {
         // 안드로이드 8.0 이상이면 노티피케이션 메시지를 띄우고 포그라운드 서비스로 운영한다.
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel channel = new NotificationChannel("Pavlov", "Pavlov", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel = new NotificationChannel("Pavlov", "Pavlov", NotificationManager.IMPORTANCE_DEFAULT);
+
             channel.enableLights(true);
             channel.setLightColor(Color.RED);
             channel.enableVibration(true);
@@ -93,7 +95,7 @@ public class StepCounterService extends Service {
             builder.setAutoCancel(true);
             Notification notification = builder.build();
             // 현재 노티피케이션 메시즈를 포그라운드 서비스의 메시지로 등록한다.
-            startForeground(10, notification);
+            startForeground(Mission.MISSION_TYPE_WALK_STEPCOUNT, notification);
         }
     }
     private void removeServiceOnForeground()
@@ -101,7 +103,7 @@ public class StepCounterService extends Service {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            manager.cancel(10);
+            manager.cancel(Mission.MISSION_TYPE_WALK_STEPCOUNT);
         }
     }
 

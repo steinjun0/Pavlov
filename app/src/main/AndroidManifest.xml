@@ -28,15 +28,15 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".MainActivity" />
-        <activity android:name=".UIComponent.Gps_Meter_Activity" />
-        <activity android:name=".UIComponent.StepCountingActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".UIComponent.Gps_Meter_Activity" />
+        <activity android:name=".UIComponent.StepCountingActivity"></activity>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

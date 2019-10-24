@@ -2,6 +2,7 @@ package kr.osam.pavlov.Missons;
 
 import android.location.Location;
 import android.os.IBinder;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -16,10 +17,10 @@ public class GpsCountMission extends Mission {
     List<Location> locationList;
     Double distance;
 
-    GpsCountMission(String _title, int _ID, int _goal, int _present, int _type, Calendar _exp,
+    public GpsCountMission(String _title, int _ID, int _goal, int _present, Calendar _exp,
                     List<Location> _locationList)
-    { title = _title; missionID = _ID; goal = _goal; present = _present; type = _type;
-      locationList = _locationList;
+    { title = _title; missionID = _ID; goal = _goal; present = _present; type = Mission.MISSION_TYPE_WALK_DISTANCE;
+      locationList = _locationList; condition = 0;
       exp = _exp; location_now = null;
       distance = (double)_present;
       location_prev = (locationList.isEmpty()?null:locationList.get(locationList.size()-1));}
@@ -29,16 +30,18 @@ public class GpsCountMission extends Mission {
         location_prev = location_now;
         locationList.add(location_now);
         location_now = ((GPSDistanceService.GPSDistanceBinder)binder).getService().getLoctaion();
-        if( location_prev == null || location_now == location_prev ) { return; }
+        if( location_prev == null ) { return; }
 
-        double tmp = location_now.distanceTo( location_prev );
-        if(tmp < 100 && tmp > .1)
+        float tmp = location_now.distanceTo( location_prev );
+        if(tmp < 100. && tmp > .1)
         {
             distance += tmp;
-            present = (int)Double.doubleToLongBits(distance);
+            present = (int)Math.round(distance);
         }
-        if( present > goal ) {condition = 0; return;}
-        if( exp.compareTo(Calendar.getInstance()) == -1 ) { condition = -1; return; }
+
+        if( present >= goal ) { condition = Mission.MISSION_SUCCES; return; }
+        Calendar now = Calendar.getInstance();
+        if( exp.compareTo(now) <= 0 ) { condition = Mission.MISSION_FAILED; return; }
     }
 
     @Override public int getMissionID() { return missionID; }

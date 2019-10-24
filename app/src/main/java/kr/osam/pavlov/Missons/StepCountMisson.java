@@ -12,20 +12,26 @@ public class StepCountMisson extends Mission {
     int step_Now;
     int step_Prev;
 
-    public StepCountMisson(String _title, int _ID, int _goal, int _present, int _type, Calendar _exp)
-                { title = _title; missionID = _ID; goal = _goal; present = _present; type = _type; condition = 0;
+    public StepCountMisson(String _title, int _ID, int _goal, int _present, Calendar _exp)
+                { title = _title; missionID = _ID; goal = _goal; present = _present; type = Mission.MISSION_TYPE_WALK_STEPCOUNT; condition = 0;
                   exp = _exp; step_Now = 0; step_Prev = 0; }
 
     @Override
     public void upDate(IBinder binder) {
+
+        if(step_Prev == 0)
+        {
+            step_Now =  ((StepCounterService.StepCounterBinder)binder).getService().getSteps();
+            step_Prev = step_Now;
+        }
+
         step_Prev = step_Now;
         step_Now =  ((StepCounterService.StepCounterBinder)binder).getService().getSteps();
-        present += step_Now - step_Prev;
+        present += (step_Now - step_Prev);
 
-        Log.d("test", title + " " + missionID+ " " + goal+ " " + present);
-
-        if( present >= goal ) { condition = 1; return; }
-        if( exp.compareTo(Calendar.getInstance()) == -1 ) { condition = -1; return; }
+        if( present >= goal ) { condition = Mission.MISSION_SUCCES; return; }
+        Calendar now = Calendar.getInstance();
+        if( (exp.getTimeInMillis() - now.getTimeInMillis()) <= 0 ) { condition = Mission.MISSION_FAILED; return; }
     }
 
     @Override public int getMissionID() { return missionID; }

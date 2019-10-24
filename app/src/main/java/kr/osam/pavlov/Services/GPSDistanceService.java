@@ -3,6 +3,7 @@ package kr.osam.pavlov.Services;
 import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -107,7 +108,9 @@ public class GPSDistanceService extends Service {
         // 안드로이드 8.0 이상이면 노티피케이션 메시지를 띄우고 포그라운드 서비스로 운영한다.
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel channel = new NotificationChannel("Pavlov", "Pavlov", NotificationManager.IMPORTANCE_HIGH);
+
+            NotificationChannel channel = new NotificationChannel("Pavlov", "Pavlov", NotificationManager.IMPORTANCE_DEFAULT);
+
             channel.enableLights(true);
             channel.setLightColor(Color.RED);
             channel.enableVibration(true);
