@@ -2,7 +2,6 @@ package kr.osam.pavlov.Services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
-import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ComponentName;
@@ -15,13 +14,10 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
-
 import androidx.core.app.NotificationCompat;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
 import kr.osam.pavlov.Missons.GpsCountMission;
 import kr.osam.pavlov.Missons.Mission;
 import kr.osam.pavlov.Missons.StepCountMisson;
@@ -51,6 +47,14 @@ public class MissionManager extends Service {
     public void onCreate() {
         //missionList.addAll(dbManager.readMission());
         isManagerRunning = false;
+
+        Calendar tmp =  Calendar.getInstance();
+        tmp.set(2019,9,24,14,00);
+
+        missionList.add(new StepCountMisson("집에",0, 50, 0, tmp));
+        missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location> ()));
+        missionList.add(new StepCountMisson("싶다",0, 20000, 0, tmp));
+
         super.onCreate();
     }
 
@@ -58,12 +62,6 @@ public class MissionManager extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         //throw new UnsupportedOperationException("Not yet implemented");
-        Calendar tmp =  Calendar.getInstance();
-        tmp.set(2019,9,24,6,24);
-
-        missionList.add(new StepCountMisson("집에",0, 50, 0, tmp));
-        missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location> ()));
-        missionList.add(new StepCountMisson("싶다",0, 20000, 0, tmp));
 
         WatcherThread thread = new WatcherThread();
         binder = new MissionManagerBinder();
@@ -102,7 +100,10 @@ public class MissionManager extends Service {
                     {
                         if(curruntMission.getCondition()==0)
                         {
-                            curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
+                            if(mConn.get(curruntMission.getType()).m_service != null)
+                            {
+                                curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
+                            }
                         }
                     }
 
@@ -110,6 +111,7 @@ public class MissionManager extends Service {
 
                     tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
                     sleep((50 - tmpTime)>0 ? (50 - tmpTime) : 0);
+
                 } catch (Exception e) { Log.d("CatchExeption", e.toString()); }
             }
             removeServiceOnForeground();
@@ -204,13 +206,13 @@ public class MissionManager extends Service {
             channel.enableVibration(true);
             manager.createNotificationChannel(channel);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "Pavlov");
-            builder.setSmallIcon(android.R.drawable.ic_menu_search);
-            builder.setContentTitle("Pavlov가 당신을 지켜보고있습니다");
-            builder.setContentText("Pavlov가 당신의 목표를 응원합니다.");
-            builder.setAutoCancel(true);
-            Notification notification = builder.build();
-            // 현재 노티피케이션 메시즈를 포그라운드 서비스의 메시지로 등록한다.
+            Notification notification = new NotificationCompat.Builder(this, "Pavlov")
+                    .setSmallIcon(android.R.drawable.ic_menu_search)
+                    .setContentTitle("Pavlov가 당신을 지켜보고있습니다")
+                    .setContentText("Pavlov가 당신의 목표를 응원합니다.")
+                    .setAutoCancel(true)
+                    .build();
+
             startForeground(0xFF, notification);
         }
     }

@@ -2,9 +2,6 @@ package kr.osam.pavlov.Missons;
 
 import android.location.Location;
 import android.os.IBinder;
-import android.util.Log;
-
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -33,7 +30,7 @@ public class GpsCountMission extends Mission {
         if( location_prev == null ) { return; }
 
         float tmp = location_now.distanceTo( location_prev );
-        if(tmp < 100. && tmp > .1)
+        if(tmp < 20. && tmp > 1.)
         {
             distance += tmp;
             present = (int)Math.round(distance);

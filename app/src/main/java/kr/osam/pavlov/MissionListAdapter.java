@@ -3,6 +3,7 @@ package kr.osam.pavlov;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +46,7 @@ public class MissionListAdapter extends BaseAdapter {
     // Adapter에 사용되는 데이터의 개수를 리턴. : 필수 구현
     @Override
     public int getCount() {
+        Log.d("test100", "size : " + missionListItems.size());
         return missionListItems.size() ;
     }
 
@@ -145,7 +147,14 @@ public class MissionListAdapter extends BaseAdapter {
                     GPS_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
                                          ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
                                          ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
-                    GPS_PresentText.setText((listItem.mission.getPresent()<1000?listItem.mission.getPresent() + "m":((float)listItem.mission.getPresent()/1000)+ "km"));
+
+
+
+                    GPS_PresentText.setText(
+                            listItem.mission.getPresent() > listItem.mission.getGoal()
+                                    ? (listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000)+ "km")
+                                    : (listItem.mission.getPresent()<1000?listItem.mission.getPresent() + "m":((float)listItem.mission.getPresent()/1000)+ "km")
+                    );
                     GPS_GoalText.setText((listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000) + "km"));
                     GPS_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*GPS_progressBar.getMax()));
                     break;
@@ -187,7 +196,12 @@ public class MissionListAdapter extends BaseAdapter {
                     Step_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
                             ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
                             ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
-                    Step_PresentText.setText(listItem.mission.getPresent() + "걸음");
+
+                    Step_PresentText.setText(
+                            listItem.mission.getPresent() > listItem.mission.getGoal()
+                                    ? (listItem.mission.getGoal() + "걸음")
+                                    : (listItem.mission.getPresent() + "걸음")
+                    );
                     Step_GoalText.setText(listItem.mission.getGoal() + "걸음");
                     Step_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*Step_progressBar.getMax()));
                     break;

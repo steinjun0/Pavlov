@@ -88,12 +88,13 @@ public class StepCounterService extends Service {
             channel.enableVibration(true);
             manager.createNotificationChannel(channel);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "Pavlov");
-            builder.setSmallIcon(android.R.drawable.ic_menu_search);
-            builder.setContentTitle("Pavlov가 당신을 보고있습니다.");
-            builder.setContentText("Pavlov가 당신의 걸음수를 측정하고 있습니다.");
-            builder.setAutoCancel(true);
-            Notification notification = builder.build();
+            Notification notification = new NotificationCompat.Builder(this, "Pavlov")
+                    .setSmallIcon(android.R.drawable.ic_menu_search)
+                    .setContentTitle("Pavlov가 당신을 지켜보고있습니다")
+                    .setContentText("Pavlov가 당신의 목표를 응원합니다.")
+                    .setAutoCancel(true)
+                    .build();
+
             // 현재 노티피케이션 메시즈를 포그라운드 서비스의 메시지로 등록한다.
             startForeground(Mission.MISSION_TYPE_WALK_STEPCOUNT, notification);
         }
