@@ -13,10 +13,14 @@ public class AppUseTimeMission extends Mission {
 
 
     Drawable icon;
+    int remainTime;
+    int remainSeconds;
+    int remainMinutes;
+    int remainHours;
 
     public AppUseTimeMission(String _title, int _ID, int _goal, Calendar _date , Drawable icon)
     { title = _title; missionID = _ID; goal = _goal; condition = 0; type = 2; this.icon = icon;
-    exp = _date;}
+        exp = _date;}
 
     @Override
     public void upDate(IBinder binder) {
@@ -26,8 +30,12 @@ public class AppUseTimeMission extends Mission {
         else
             Log.d("AppUseTimeMission", "binder == null");
 
-        Log.d("AppUseTimeMission", title + present);
-        if( present > goal ) { condition = -1; return; }
+        remainTime = goal-present;
+        if( remainTime < 0 ) { condition = -1; remainTime = 0; return; }
+        remainSeconds = ((remainTime)/1000)%60;
+        remainMinutes = ((remainTime)/60000)%60;
+        remainHours = ((remainTime)/3600000)%24;
+
         //매일 밤 24시에 마지막 upDate후 DB에 저장되고 present는 0으로 초기화, condition은 1로 초기화됨
     }
 
@@ -38,4 +46,7 @@ public class AppUseTimeMission extends Mission {
     @Override public int getType() { return type; }
     @Override public Calendar getDate() { return exp; }
     public Drawable getIcon() {return icon;}
+    public int getRemainSeconds() {return remainSeconds;}
+    public int getRemainMinutes() {return remainMinutes;}
+    public int getRemainHours() {return remainHours;}
 }

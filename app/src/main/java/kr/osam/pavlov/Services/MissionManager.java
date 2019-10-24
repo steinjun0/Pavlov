@@ -52,12 +52,12 @@ public class MissionManager extends Service {
         isManagerRunning = false;
 
         Calendar tmp =  Calendar.getInstance();
-        tmp.set(2019,9,24,23,00);
+        tmp.set(2019,9,25,23,00);
 
         missionList.add(new StepCountMisson("집에",0, 50, 0, tmp));
         missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location>()));
         if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
-            missionList.add(new AppUseTimeMission("com.kakao.talk", 0, 20000, tmp, getDrawable(R.drawable.common_full_open_on_phone)));
+            missionList.add(new AppUseTimeMission("com.kakao.talk", 0, 36000000, tmp, getDrawable(R.drawable.common_full_open_on_phone)));
         }
 
         super.onCreate();
@@ -117,7 +117,7 @@ public class MissionManager extends Service {
                     unsetBind();
 
                     tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
-                    sleep((50 - tmpTime)>0 ? (50 - tmpTime) : 0);
+                    sleep((1000 - tmpTime)>0 ? (1000 - tmpTime) : 0);
 
                 } catch (Exception e) { Log.d("CatchExeption", e.toString()); }
             }

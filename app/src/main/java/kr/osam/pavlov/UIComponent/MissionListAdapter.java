@@ -53,159 +53,173 @@ public class MissionListAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         final Context context = parent.getContext();
         int viewType = getItemViewType(position) ;
+        String timestr;
 
         //if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) ;
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) ;
 
-            // Data Set(listViewItemList)에서 position에 위치한 데이터 참조 획득
-            MissionListItem listItem = missionListItems.get(position);
+        // Data Set(listViewItemList)에서 position에 위치한 데이터 참조 획득
+        MissionListItem listItem = missionListItems.get(position);
 
-            switch (viewType) {
-                case Mission.MISSION_TYPE_ALARM:
-                    convertView = inflater.inflate(R.layout.alarm_item_layout,
-                            parent, false);
+        switch (viewType) {
+            case Mission.MISSION_TYPE_ALARM:
+                convertView = inflater.inflate(R.layout.alarm_item_layout,
+                        parent, false);
 
-                    TextView alarm_titleText  = convertView.findViewById(R.id.AlramTitleText);
-                    TextView alarm_DateText   = convertView.findViewById(R.id.AlramDateText);
-                    TextView alarm_hourText   = convertView.findViewById(R.id.AlramHourText);
-                    TextView alarm_minuetText = convertView.findViewById(R.id.AlramMinuetText);
+                TextView alarm_titleText  = convertView.findViewById(R.id.AlramTitleText);
+                TextView alarm_DateText   = convertView.findViewById(R.id.AlramDateText);
+                TextView alarm_hourText   = convertView.findViewById(R.id.AlramHourText);
+                TextView alarm_minuetText = convertView.findViewById(R.id.AlramMinuetText);
 
-                    String subtitle = ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
-                                    ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
-                                    ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH));
+                String subtitle = ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
+                        ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
+                        ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH));
 
-                    alarm_titleText.setText(listItem.mission.title);
-                    alarm_DateText.setText(subtitle);
-                    alarm_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
-                    alarm_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
-                    break;
+                alarm_titleText.setText(listItem.mission.title);
+                alarm_DateText.setText(subtitle);
+                alarm_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
+                alarm_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
+                break;
 
-                case Mission.MISSION_TYPE_USEAGE_DEVICE:
-                    convertView = inflater.inflate(R.layout.timechecker_list_item,
-                            parent, false);
-                    TextView device_titleText  = convertView.findViewById(R.id.TimeTitleText);
-                    TextView device_hourText   = convertView.findViewById(R.id.TimeHourText);
-                    TextView device_minuetText = convertView.findViewById(R.id.TimeMinuetText);
-                    TextView device_secText    = convertView.findViewById(R.id.TimeSecText);
+            case Mission.MISSION_TYPE_USEAGE_DEVICE:
+                convertView = inflater.inflate(R.layout.timechecker_list_item,
+                        parent, false);
+                TextView device_titleText  = convertView.findViewById(R.id.TimeTitleText);
+                TextView device_hourText   = convertView.findViewById(R.id.TimeHourText);
+                TextView device_minuetText = convertView.findViewById(R.id.TimeMinuetText);
+                TextView device_secText    = convertView.findViewById(R.id.TimeSecText);
 
-                    device_titleText.setText(listItem.mission.title);
-                    device_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
-                    device_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
-                    device_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                    break;
+                device_titleText.setText(listItem.mission.title);
+                device_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
+                device_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
+                device_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
+                break;
 
-                case Mission.MISSION_TYPE_USEAGE_APP:
-                    convertView = inflater.inflate(R.layout.app_usage_cheker,
-                            parent, false);
-                    TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
-                    TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
-                    TextView app_minuetText = convertView.findViewById(R.id.APPMinuetText);
-                    TextView app_secText    = convertView.findViewById(R.id.APPSecText);
-                    ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
+            case Mission.MISSION_TYPE_USEAGE_APP:
+                convertView = inflater.inflate(R.layout.app_usage_cheker,
+                        parent, false);
+                TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
+                TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
+                TextView app_minuetText = convertView.findViewById(R.id.APPMinuetText);
+                TextView app_secText    = convertView.findViewById(R.id.APPSecText);
+                ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
 
-                    app_titleText.setText(listItem.mission.title);
-                    app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
-                    app_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
-                    app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                    app_iconView.setImageDrawable(((AppUseTimeMission)listItem.mission).getIcon());
-                    break;
+                app_titleText.setText(listItem.mission.title);
+                app_hourText.setText(ByTwoChar(((AppUseTimeMission)listItem.mission).getRemainHours()));
+                app_minuetText.setText(ByTwoChar(((AppUseTimeMission)listItem.mission).getRemainMinutes()));
+                app_secText.setText(ByTwoChar(((AppUseTimeMission)listItem.mission).getRemainSeconds()));
+                app_iconView.setImageDrawable(((AppUseTimeMission)listItem.mission).getIcon());
 
-                case Mission.MISSION_TYPE_WALK_DISTANCE:
-                    convertView = inflater.inflate(R.layout.gps_list_item,
-                            parent, false);
-                    TextView GPS_titleText   = convertView.findViewById(R.id.CounterTitleText);
-                    TextView GPS_DateText    = convertView.findViewById(R.id.CounterDateText);
-                    TextView GPS_PresentText = convertView.findViewById(R.id.CounterpresentText);
-                    TextView GPS_GoalText    = convertView.findViewById(R.id.CountergoalText);
-                    TextView GPS_PerText     = convertView.findViewById(R.id.CounterPer);
-                    ProgressBar GPS_progressBar = convertView.findViewById(R.id.progressBar);
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        switch (listItem.mission.getCondition()) {
-                            case Mission.MISSION_FAILED:
-                                GPS_GoalText.setTextColor(context.getColor(R.color.colorAccent));
-                                GPS_PerText.setTextColor(context.getColor(R.color.colorAccent));
-                                GPS_PresentText.setTextColor(context.getColor(R.color.colorAccent));
-                                break;
+                    if (listItem.mission.getCondition() == Mission.MISSION_FAILED) {
 
-                            case Mission.MISSION_SUCCES:
-                                GPS_GoalText.setTextColor(context.getColor(R.color.colorPrimary));
-                                GPS_PerText.setTextColor(context.getColor(R.color.colorPrimary));
-                                GPS_PresentText.setTextColor(context.getColor(R.color.colorPrimary));
-                                break;
-
-                            case Mission.MISSION_ON_PROGRESS:
-                                GPS_GoalText.setTextColor(GPS_titleText.getTextColors());
-                                GPS_PerText.setTextColor(GPS_titleText.getTextColors());
-                                GPS_PresentText.setTextColor(GPS_titleText.getTextColors());
-                                break;
-                        }
+                        app_hourText.setTextColor(context.getColor(R.color.colorAccent));
+                        app_minuetText.setTextColor(context.getColor(R.color.colorAccent));
+                        app_secText.setTextColor(context.getColor(R.color.colorAccent));
                     }
+                }
 
-                    GPS_titleText.setText(listItem.mission.title);
-                    GPS_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
-                            ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
-                            ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
+                break;
 
+            case Mission.MISSION_TYPE_WALK_DISTANCE:
+                convertView = inflater.inflate(R.layout.gps_list_item,
+                        parent, false);
+                TextView GPS_titleText   = convertView.findViewById(R.id.CounterTitleText);
+                TextView GPS_DateText    = convertView.findViewById(R.id.CounterDateText);
+                TextView GPS_PresentText = convertView.findViewById(R.id.CounterpresentText);
+                TextView GPS_GoalText    = convertView.findViewById(R.id.CountergoalText);
+                TextView GPS_PerText     = convertView.findViewById(R.id.CounterPer);
+                ProgressBar GPS_progressBar = convertView.findViewById(R.id.progressBar);
 
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    switch (listItem.mission.getCondition()) {
+                        case Mission.MISSION_FAILED:
+                            GPS_GoalText.setTextColor(context.getColor(R.color.colorAccent));
+                            GPS_PerText.setTextColor(context.getColor(R.color.colorAccent));
+                            GPS_PresentText.setTextColor(context.getColor(R.color.colorAccent));
+                            break;
 
-                    GPS_PresentText.setText(
-                            listItem.mission.getPresent() > listItem.mission.getGoal()
-                                    ? (listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000)+ "km")
-                                    : (listItem.mission.getPresent()<1000?listItem.mission.getPresent() + "m":((float)listItem.mission.getPresent()/1000)+ "km")
-                    );
-                    GPS_GoalText.setText((listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000) + "km"));
-                    GPS_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*GPS_progressBar.getMax()));
-                    break;
+                        case Mission.MISSION_SUCCES:
+                            GPS_GoalText.setTextColor(context.getColor(R.color.colorPrimary));
+                            GPS_PerText.setTextColor(context.getColor(R.color.colorPrimary));
+                            GPS_PresentText.setTextColor(context.getColor(R.color.colorPrimary));
+                            break;
 
-                case Mission.MISSION_TYPE_WALK_STEPCOUNT:
-                    convertView = inflater.inflate(R.layout.gps_list_item,
-                            parent, false);
-
-                    TextView Step_titleText   = convertView.findViewById(R.id.CounterTitleText);
-                    TextView Step_DateText    = convertView.findViewById(R.id.CounterDateText);
-                    TextView Step_PresentText = convertView.findViewById(R.id.CounterpresentText);
-                    TextView Step_PerText     = convertView.findViewById(R.id.CounterPer);
-                    TextView Step_GoalText    = convertView.findViewById(R.id.CountergoalText);
-                    ProgressBar Step_progressBar = convertView.findViewById(R.id.progressBar);
-
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        switch (listItem.mission.getCondition()) {
-                            case Mission.MISSION_FAILED:
-                                Step_GoalText.setTextColor(context.getColor(R.color.colorAccent));
-                                Step_PerText.setTextColor(context.getColor(R.color.colorAccent));
-                                Step_PresentText.setTextColor(context.getColor(R.color.colorAccent));
-                                break;
-
-                            case Mission.MISSION_SUCCES:
-                                Step_GoalText.setTextColor(context.getColor(R.color.colorPrimary));
-                                Step_PerText.setTextColor(context.getColor(R.color.colorPrimary));
-                                Step_PresentText.setTextColor(context.getColor(R.color.colorPrimary));
-                                break;
-
-                            case Mission.MISSION_ON_PROGRESS:
-                                Step_GoalText.setTextColor(Step_titleText.getTextColors());
-                                Step_PerText.setTextColor(Step_titleText.getTextColors());
-                                Step_PresentText.setTextColor(Step_titleText.getTextColors());
-                                break;
-                        }
+                        case Mission.MISSION_ON_PROGRESS:
+                            GPS_GoalText.setTextColor(GPS_titleText.getTextColors());
+                            GPS_PerText.setTextColor(GPS_titleText.getTextColors());
+                            GPS_PresentText.setTextColor(GPS_titleText.getTextColors());
+                            break;
                     }
+                }
 
-                    Step_titleText.setText(listItem.mission.title);
-                    Step_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
-                            ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
-                            ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
+                timestr = ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
+                        ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
+                        ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH));
+                GPS_titleText.setText(listItem.mission.title);
+                GPS_DateText.setText(timestr);
 
-                    Step_PresentText.setText(
-                            listItem.mission.getPresent() > listItem.mission.getGoal()
-                                    ? (listItem.mission.getGoal() + "걸음")
-                                    : (listItem.mission.getPresent() + "걸음")
-                    );
-                    Step_GoalText.setText(listItem.mission.getGoal() + "걸음");
-                    Step_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*Step_progressBar.getMax()));
-                    break;
-            }
-       // }
+
+
+                GPS_PresentText.setText(
+                        listItem.mission.getPresent() > listItem.mission.getGoal()
+                                ? (listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000)+ "km")
+                                : (listItem.mission.getPresent()<1000?listItem.mission.getPresent() + "m":((float)listItem.mission.getPresent()/1000)+ "km")
+                );
+                GPS_GoalText.setText((listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000) + "km"));
+                GPS_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*GPS_progressBar.getMax()));
+                break;
+
+            case Mission.MISSION_TYPE_WALK_STEPCOUNT:
+                convertView = inflater.inflate(R.layout.gps_list_item,
+                        parent, false);
+
+                TextView Step_titleText   = convertView.findViewById(R.id.CounterTitleText);
+                TextView Step_DateText    = convertView.findViewById(R.id.CounterDateText);
+                TextView Step_PresentText = convertView.findViewById(R.id.CounterpresentText);
+                TextView Step_PerText     = convertView.findViewById(R.id.CounterPer);
+                TextView Step_GoalText    = convertView.findViewById(R.id.CountergoalText);
+                ProgressBar Step_progressBar = convertView.findViewById(R.id.progressBar);
+
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    switch (listItem.mission.getCondition()) {
+                        case Mission.MISSION_FAILED:
+                            Step_GoalText.setTextColor(context.getColor(R.color.colorAccent));
+                            Step_PerText.setTextColor(context.getColor(R.color.colorAccent));
+                            Step_PresentText.setTextColor(context.getColor(R.color.colorAccent));
+                            break;
+
+                        case Mission.MISSION_SUCCES:
+                            Step_GoalText.setTextColor(context.getColor(R.color.colorPrimary));
+                            Step_PerText.setTextColor(context.getColor(R.color.colorPrimary));
+                            Step_PresentText.setTextColor(context.getColor(R.color.colorPrimary));
+                            break;
+
+                        case Mission.MISSION_ON_PROGRESS:
+                            Step_GoalText.setTextColor(Step_titleText.getTextColors());
+                            Step_PerText.setTextColor(Step_titleText.getTextColors());
+                            Step_PresentText.setTextColor(Step_titleText.getTextColors());
+                            break;
+                    }
+                }
+
+                Step_titleText.setText(listItem.mission.title);
+                timestr = ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
+                        ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
+                        ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH));
+                Step_DateText.setText(timestr);
+
+                Step_PresentText.setText(
+                        listItem.mission.getPresent() > listItem.mission.getGoal()
+                                ? (listItem.mission.getGoal() + "걸음")
+                                : (listItem.mission.getPresent() + "걸음")
+                );
+                Step_GoalText.setText(listItem.mission.getGoal() + "걸음");
+                Step_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*Step_progressBar.getMax()));
+                break;
+        }
+        // }
 
         ViewGroup.LayoutParams params = convertView.getLayoutParams();
         params.height = 256;

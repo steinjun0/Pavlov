@@ -1,8 +1,5 @@
 package kr.osam.pavlov.UIComponent;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -10,6 +7,14 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import kr.osam.pavlov.R;
 import kr.osam.pavlov.Services.MissionManager;
@@ -40,9 +45,6 @@ public class MainActivity extends AppCompatActivity {
         frag = new CustomListViewFragment();
         frag.setArguments(bundle);
         getSupportFragmentManager().beginTransaction().replace(R.id.FragmentContents, frag).commit();
-
-
-
     }
 
     @Override
@@ -88,8 +90,6 @@ public class MainActivity extends AppCompatActivity {
             return !activity.isFinishing();
         }
     }
-
-    @Nullable
     public MissionManager getService()
     {
         bindService(intent, conn, BIND_ABOVE_CLIENT);
@@ -101,5 +101,38 @@ public class MainActivity extends AppCompatActivity {
     public void unbind()
     {
         unbindService(conn);
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mainacctmenu, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.AddMission:
+
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                Fragment prev = getSupportFragmentManager().findFragmentByTag("dialog");
+                if (prev != null) { ft.remove(prev); }
+                ft.addToBackStack(null);
+                DialogFragment dialogFragment = ListFragment.newInstance(MainActivity.this);
+                dialogFragment.show(ft, "dialog");
+
+                break;
+            case R.layout.fragment_list:
+
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

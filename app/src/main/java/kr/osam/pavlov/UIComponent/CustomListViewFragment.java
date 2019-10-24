@@ -12,7 +12,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Switch;
 
 import kr.osam.pavlov.UIComponent.MainActivity;
 import kr.osam.pavlov.UIComponent.MissionListAdapter;
@@ -30,7 +32,6 @@ public class CustomListViewFragment extends Fragment {
     IBinder binder;
     UpdaterThread thread;
     MainActivity activity;
-
     public CustomListViewFragment() {// Required empty public constructor
         }
 
@@ -57,6 +58,26 @@ public class CustomListViewFragment extends Fragment {
 
         thread = new UpdaterThread();
         thread.start();
+
+        missionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                int type = position;
+                switch(type)
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                }
+            }
+        });
 
         // Inflate the layout for this fragment
         return v1;

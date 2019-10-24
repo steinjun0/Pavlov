@@ -22,6 +22,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,7 +42,7 @@ public class AddAppUseMissionActivity extends AppCompatActivity {
     LinearLayout ll_cancel, ll_save;
     ImageView iv;
     TimePicker tp;
-    int selectedAppIdx;
+    int selectedAppIdx = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +107,12 @@ public class AddAppUseMissionActivity extends AppCompatActivity {
             ll = findViewById(R.id.ll_appselect);
             tp = findViewById(R.id.tp_appusetime);
             tp.setIs24HourView(true);
+            if(Build.VERSION.SDK_INT > 22)
+            {
+                tp.setHour(1);
+                tp.setMinute(0);
+            }
+
             ll_save = findViewById(R.id.ll_applimitsave);
             ll_cancel = findViewById(R.id.ll_applimitcancel);
 
@@ -126,13 +133,21 @@ public class AddAppUseMissionActivity extends AppCompatActivity {
             ll_save.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int limitTime = 0;
-                    if(Build.VERSION.SDK_INT > 22) {
-                        limitTime += tp.getHour() * 3600000;
-                        limitTime += tp.getMinute() * 60000;
+                    if(selectedAppIdx == -1)
+                    {
+                        Toast.makeText(AddAppUseMissionActivity.this, "어플리케이션을 선택해 주십시오", Toast.LENGTH_SHORT).show();
                     }
-                    missionManagerService.addMission(new AppUseTimeMission(packages.get(selectedAppIdx).packageName, 0, limitTime, Calendar.getInstance(), icons.get(selectedAppIdx)));
-                    onBackPressed();
+                    else
+                    {
+                        int limitTime = 0;
+                        if(Build.VERSION.SDK_INT > 22) {
+                            limitTime += tp.getHour() * 3600000;
+                            limitTime += tp.getMinute() * 60000;
+                        }
+                        missionManagerService.addMission(new AppUseTimeMission(packages.get(selectedAppIdx).packageName, missionManagerService.missionList.size(), limitTime, Calendar.getInstance(), icons.get(selectedAppIdx)));
+                        onBackPressed();
+                    }
+
                 }
             });
 
