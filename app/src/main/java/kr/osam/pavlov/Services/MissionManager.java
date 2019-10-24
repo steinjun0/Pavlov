@@ -49,7 +49,7 @@ public class MissionManager extends Service {
         isManagerRunning = false;
 
         Calendar tmp =  Calendar.getInstance();
-        tmp.set(2019,9,24,14,00);
+        tmp.set(2019,9,24,16,30);
 
         missionList.add(new StepCountMisson("집에",0, 50, 0, tmp));
         missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location> ()));
