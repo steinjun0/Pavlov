@@ -3,7 +3,6 @@
     package="kr.osam.pavlov">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -28,14 +27,14 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".UIComponent.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UIComponent.Gps_Meter_Activity" />
+        <activity android:name=".UIComponent.Gps_Meter_Activity"></activity>
         <activity android:name=".UIComponent.StepCountingActivity"></activity>
 
         <meta-data

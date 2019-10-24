@@ -1,12 +1,12 @@
-package kr.osam.pavlov.Services;
+package kr.osam.pavlov.UIComponent;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,11 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import kr.osam.pavlov.MainActivity;
-import kr.osam.pavlov.MissionListAdapter;
+import kr.osam.pavlov.UIComponent.MainActivity;
+import kr.osam.pavlov.UIComponent.MissionListAdapter;
 import kr.osam.pavlov.R;
-
-import static android.content.Context.BIND_ABOVE_CLIENT;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -29,6 +27,7 @@ public class CustomListViewFragment extends Fragment {
 
     boolean isRunning;
     MissionListAdapter adapter;
+    IBinder binder;
     UpdaterThread thread;
     MainActivity activity;
 
@@ -37,28 +36,30 @@ public class CustomListViewFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+
+        Bundle bundle = getArguments();
+
         super.onCreate(savedInstanceState);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View v1 = inflater.inflate(R.layout.fragment_custom_list_view, container, false);
 
-        thread = new UpdaterThread();
-        thread.start();
 
-        missionListView = getView().findViewById(R.id.MissionListView);
+        adapter = new MissionListAdapter();
+        missionListView = v1.findViewById(R.id.MissionListView);
         missionListView.setAdapter(adapter);
         isRunning = true;
 
         activity = (MainActivity)getActivity();
 
-        adapter = new MissionListAdapter();
-
-
+        thread = new UpdaterThread();
+        thread.start();
 
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_custom_list_view, container, false);
+        return v1;
     }
 
     @Override
@@ -77,7 +78,7 @@ public class CustomListViewFragment extends Fragment {
 
                     Log.d("Test", "씨이바아아아");
 
-                    adapter.CopyMissionsList(activity.getService().missionList);
+                    adapter.CopyMissionsList(((MainActivity)getActivity()).getService().missionList);
 
                     activity.unbind();
 

@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.UIComponent;
 
 import java.util.Calendar;
 
