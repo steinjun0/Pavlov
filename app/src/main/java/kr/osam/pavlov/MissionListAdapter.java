@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import kr.osam.pavlov.Missons.AppUseTimeMission;
 import kr.osam.pavlov.Missons.Mission;
 
 public class MissionListAdapter extends BaseAdapter {
@@ -94,19 +95,19 @@ public class MissionListAdapter extends BaseAdapter {
                 break;
 
             case Mission.MISSION_TYPE_USEAGE_APP:
-//                convertView = inflater.inflate(R.layout.activity_app_usage,
-//                        parent, false);
-//                TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
-//                TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
-//                TextView app_minuetText = convertView.findViewById(R.id.APPMinuetText);
-//                TextView app_secText    = convertView.findViewById(R.id.APPSecText);
-//                ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
-//
-//                app_titleText.setText(listItem.mission.title);
-//                app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
-//                app_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
-//                app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                // TODO app_iconView.setImageDrawable(((아무튼)listItem.mission).Drawable);
+                convertView = inflater.inflate(R.layout.activity_app_usage,
+                        parent, false);
+                TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
+                TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
+                TextView app_minuetText = convertView.findViewById(R.id.APPMinuetText);
+                TextView app_secText    = convertView.findViewById(R.id.APPSecText);
+                ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
+
+                app_titleText.setText(listItem.mission.title);
+                app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
+                app_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
+                app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
+                app_iconView.setImageDrawable(((AppUseTimeMission)(listItem.mission)).getIcon());
                 break;
 
             case Mission.MISSION_TYPE_WALK_DISTANCE:

@@ -4,6 +4,7 @@ import android.app.Service;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
@@ -64,7 +65,7 @@ public class AppUseTimeCheckService extends Service {
         //1초마다 앱 사용시간 업데이트
         if(Build.VERSION.SDK_INT < 21)
             return;
-        usageStatsManager = (UsageStatsManager) this.getSystemService(this.USAGE_STATS_SERVICE);
+        usageStatsManager = (UsageStatsManager) this.getSystemService(USAGE_STATS_SERVICE);
 
         thread  = new UpdateAppUseTime();
         thread.start();

@@ -24,19 +24,26 @@ import kr.osam.pavlov.PavlovDBParser;
 
 public class MissionManager extends Service {
 
+    //모든 미션은 이곳에 저장되고 관리됨
     public List<Mission>  missionList = new ArrayList<>();
+
+    //서비스 바인딩을 위한 리스트들
     private List<Intent>  intentList  = new ArrayList<>(Mission.MISSION_NUM_OF_MISSION_TYPE);
-    private List<manageConn> mConn = new ArrayList<>(Mission.MISSION_NUM_OF_MISSION_TYPE);
+    private List<MissionServiceConnection> mConn = new ArrayList<>(Mission.MISSION_NUM_OF_MISSION_TYPE);
     private List<Boolean> connectionStatus = new ArrayList<>();
 
+    //미션매니저의 실행 여부를 알려주는 변수
     boolean isManagerRunning;
 
+    //바인더 클래스
     public class MissionManagerBinder extends Binder{
         public MissionManager getService() { return MissionManager.this; }
     }
 
+    //바인더 인스턴스
     MissionManagerBinder binder;
 
+    //미션을 저장할 DB
     PavlovDBParser dbManager = new PavlovDBParser(this);
 
 
@@ -56,16 +63,21 @@ public class MissionManager extends Service {
 //        Calendar tmp =  Calendar.getInstance();
 //        tmp.set(2019,10,24,23,00);
 
+        //미션매니저가 시작되면
+        //바인더 초기화
         binder = new MissionManagerBinder();
 
         isManagerRunning = true;
 
-        //initIntent();
+        //리스트초기화
         initializeLists();
+
+        //반복문 스레드 시작
         ThreadAction manageMissions = new ThreadAction() ;
         Thread serviceThread = new Thread(manageMissions) ;
         serviceThread.start() ;
 
+        //서비스를 ForeGround로 올린다
         setServiceOnForeGround();
 
         return super.onStartCommand(intent, flags, startId);
@@ -80,7 +92,7 @@ public class MissionManager extends Service {
 
         for(int i = 0; i < 5; i++)
         {
-            mConn.add(new manageConn());
+            mConn.add(new MissionServiceConnection());
             connectionStatus.add(false);
         }
     }
@@ -98,19 +110,21 @@ public class MissionManager extends Service {
         public void run() {
             while (isManagerRunning)
             {
-                Log.d("WatcherThread", "running");
+                //미션들의 컨디션에 따라 서비스의 상태를 관리해준다
                 setServiceLife();
 
+                //모든 미션에 대해
                 for(Mission currentMission : missionList)
                 {
                     Log.d("MissionStatus", String.valueOf(currentMission.getCondition()));
                     if((currentMission.getCondition()==0) && connectionStatus.get(currentMission.getType()))
                     {
-
+                        //미션의 컨디션이 진행중이면 매 반복마다 업데이트
                         currentMission.upDate(mConn.get(currentMission.getType()).m_service);
                     }
                 }
 
+                //매초 반복
                 try
                 {
                     Thread.sleep(1000);
@@ -128,16 +142,20 @@ public class MissionManager extends Service {
 
     private void setServiceLife()
     {
+        //모든 미션타입에 대해
         for(int missionType = 0; missionType < Mission.MISSION_NUM_OF_MISSION_TYPE; missionType++)
         {
+
             if(containMission(missionType) && !connectionStatus.get(missionType))
             {
+                //만약 진행중인 해당 미션타입의 미션이 있고, 해당 서비스의 connectionStatus가 false라면 서비스 바인드
                 //startService(intentList.get(missionType));
                 bindService(intentList.get(missionType),mConn.get(missionType), BIND_AUTO_CREATE);
                 connectionStatus.set(missionType, true);
             }
             else if(!containMission(missionType) && connectionStatus.get(missionType))
             {
+                //만약 진행중인 해당 미션타입의 미션이 없고, 해당 서비스의 connectionStatus가 true라면 서비스 언바인드
                 //stopService(intentList.get(missionType));
                 unbindService(mConn.get(missionType));
                 connectionStatus.set(missionType, false);
@@ -145,7 +163,7 @@ public class MissionManager extends Service {
         }
     }
 
-    //missionList에 condition이 Mission.MISSION_ON_PROGRESS이고 missionType이 _missiontype인 미션이 있을 경우 true를 반환
+    //condition이 0인 미션중 해당 미션타입의 미션이 존재하면 true
     private boolean containMission(int _missiontype)
     {
         for(Mission mission : missionList)
@@ -158,109 +176,16 @@ public class MissionManager extends Service {
         return false;
     }
 
-
-//    class WatcherThread extends Thread
-//    {
-//        @Override
-//        public void run() {
-//            while (isManagerRunning)
-//            {
-//                //Log.d("WatcherThread", "running");
-//                try {
-//                    long tmpTime = SystemClock.currentThreadTimeMillis();
-//
-//                    setServiceLife();
-//
-//                    for(Mission curruntMission : missionList)
-//                    {
-//                        Log.d("MissionStatus", String.valueOf(curruntMission.getCondition()));
-//                        if(curruntMission.getCondition()==0)
-//                        {
-//                            curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
-//                        }
-//                    }
-//
-////                    tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
-////                    sleep((50 - tmpTime)>0 ? (50 - tmpTime) : 0);
-//
-//                    sleep(1000);
-//                } catch (Exception e) { /*Log.d("CatchExeption", e.toString());*/ }
-//            }
-//            removeServiceOnForeground();
-//
-//            super.run();
-//        }
-//    }
-
     public void addMission(Mission _mission) {
         missionList.add(_mission);
-        Log.d("MissionManager", _mission.getMissionID() + "th mission added");
     }
 
-    private void initIntent()
-    {
-        intentList.add(new Intent("TODO"));
-        intentList.add(new Intent("TODO"));
-        intentList.add(new Intent(this, AppUseTimeCheckService.class));
-        intentList.add(new Intent(this, GPSDistanceService.class));
-        intentList.add(new Intent(this, StepCounterService.class));
-
-        for(int i = 0; i < 5; i++)
-        {
-            mConn.add(new manageConn());
-        }
-    }
-
-    class manageConn implements ServiceConnection{
+    class MissionServiceConnection implements ServiceConnection{
         public IBinder m_service = null;
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) { m_service = service;}
         @Override
         public void onServiceDisconnected(ComponentName name) { m_service = null; }
-    }
-
-
-    private void circuitBraker()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) && mConn.get(missiontype).m_service==null )
-            {
-                Log.d("MissionManager", missiontype + "st Mission Service is On.");
-                startService(intentList.get(missiontype));
-                //bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_AUTO_CREATE);
-            }
-            if( (!containMission(missiontype)) && mConn.get(missiontype).m_service!=null )
-            {
-                Log.d("MissionManager", missiontype + "st Mission Service is Off.");
-                stopService(intentList.get(missiontype));
-                //unbindService(mConn.get(missiontype));
-            }
-        }
-    }
-
-
-
-    private void setBind()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) )
-            {
-                bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_ABOVE_CLIENT);
-            }
-        }
-    }
-    private void unsetBind()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) )
-            {
-                unbindService(mConn.get(missiontype));
-            }
-        }
-
     }
 
     private void setServiceOnForeGround()
@@ -297,9 +222,12 @@ public class MissionManager extends Service {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
+
         isManagerRunning=false;
         SystemClock.sleep(150);
         removeServiceOnForeground();
-        super.onDestroy();
+
+        //DB에 모든 미션 데이터 저장
     }
 }

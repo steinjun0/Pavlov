@@ -71,7 +71,7 @@ public class AddAppUseMissionActivity extends AppCompatActivity {
 
             //서비스 시작, 바인딩
             Intent service_intent = new Intent(AddAppUseMissionActivity.this, MissionManager.class);
-            bindService(service_intent, serviceConnection, this.BIND_AUTO_CREATE);
+            bindService(service_intent, serviceConnection, BIND_AUTO_CREATE);
 
             //모든 패키지를 받아오고, 해당 아이콘을 그리드뷰로 보여줌
 
@@ -125,8 +125,10 @@ public class AddAppUseMissionActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     int limitTime = 0;
-                    limitTime += tp.getHour()*3600000;
-                    limitTime += tp.getMinute()*60000;
+                    if(Build.VERSION.SDK_INT > 22) {
+                        limitTime += tp.getHour() * 3600000;
+                        limitTime += tp.getMinute() * 60000;
+                    }
                     missionManagerService.addMission(new AppUseTimeMission(packages.get(selectedAppIdx).packageName, 0, limitTime, icons.get(selectedAppIdx)));
                     onBackPressed();
                 }

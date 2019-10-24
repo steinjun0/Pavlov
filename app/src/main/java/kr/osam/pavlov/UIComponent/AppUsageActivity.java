@@ -3,6 +3,7 @@ package kr.osam.pavlov.UIComponent;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -36,6 +37,6 @@ public class AppUsageActivity extends AppCompatActivity {
 
         //서비스 시작, 바인딩
         Intent service_intent = new Intent(AppUsageActivity.this, MissionManager.class);
-        bindService(service_intent, serviceConnection, this.BIND_AUTO_CREATE);
+        bindService(service_intent, serviceConnection, BIND_AUTO_CREATE);
     }
 }
