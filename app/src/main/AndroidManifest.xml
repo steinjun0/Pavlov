@@ -6,7 +6,6 @@
     <uses-permission xmlns:tools="http://schemas.android.com/tools"
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -21,16 +20,39 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity
-            android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"></action>
-                <category android:name="android.intent.category.LAUNCHER"></category>
-            </intent-filter>
-        </activity>
-        <activity android:name=".AddAppUseMissionActivity" />
+        <service
+            android:name=".Services.MissionManager"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".Services.GPSDistanceService"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".Services.StepCounterService"
+            android:enabled="true"
+            android:exported="false" />
 
-        <service android:name=".AppUseTimeCheckService" />
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+        <activity android:name=".UIComponent.Gps_Meter_Activity" />
+        <activity android:name=".UIComponent.StepCountingActivity" />
+        <activity android:name=".AddAppUseMissionActivity" />
+        <activity android:name=".UIComponent.AppUsageActivity">
+
+
+        </activity>
+
+
+
+        <service android:name=".Services.AppUseTimeCheckService" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyACYm2y0HwlPWaOEXxa4f8IO7xcOht67Wc" />

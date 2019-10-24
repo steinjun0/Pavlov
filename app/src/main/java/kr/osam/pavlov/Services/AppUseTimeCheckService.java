@@ -1,4 +1,4 @@
-package kr.osam.pavlov;
+package kr.osam.pavlov.Services;
 
 import android.app.Service;
 import android.app.usage.UsageEvents;
@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class AppUseTimeCheckService extends Service {
@@ -24,12 +23,17 @@ public class AppUseTimeCheckService extends Service {
     Map<String, UsageStats> usageStatsMap;
     String tempPkgName = "kr.osam.pavlov";
     long tempPkgUseTime;
+    //boolean serviceStatus = false;
 
     UpdateAppUseTime thread;
 
-    IBinder mBinder =  new AppUseBinder();
+    AppUseBinder appUseBinder =  new AppUseBinder();
 
+    public class AppUseBinder extends Binder{
 
+        public AppUseTimeCheckService getService(){    return AppUseTimeCheckService.this;  }
+
+    }
 
     private String recentlyUsedPkgName() {
 
@@ -56,6 +60,7 @@ public class AppUseTimeCheckService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d("AppUseTimeCheckService", "onCreate()");
         //1초마다 앱 사용시간 업데이트
         if(Build.VERSION.SDK_INT < 21)
             return;
@@ -79,8 +84,8 @@ public class AppUseTimeCheckService extends Service {
                 usageStatsMap = usageStatsManager.queryAndAggregateUsageStats(System.currentTimeMillis()-System.currentTimeMillis()%86400000, System.currentTimeMillis());
 
                 String temp = recentlyUsedPkgName();
-                Log.d("ServiceLoop", tempPkgName);
-                Log.d("ServiceLoop", String.valueOf(usageStatsMap.get(tempPkgName).getTotalTimeInForeground() + tempPkgUseTime));
+                Log.d("AppUseTimeCheckService", tempPkgName);
+                Log.d("AppUseTimeCheckService", String.valueOf(usageStatsMap.get(tempPkgName).getTotalTimeInForeground() + tempPkgUseTime));
 
                 if(temp == "" || temp.equals(tempPkgName))
                 {
@@ -104,25 +109,19 @@ public class AppUseTimeCheckService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mBinder;
+        Log.d("AppUseTimeCheckService", "onBind()");
+
+
+        return appUseBinder;
     }
 
     @Override
     public void onDestroy() {
+        Log.d("AppUseTimeCheckService", "onDestroy");
+        thread.interrupt();
         super.onDestroy();
+        //serviceStatus = false;
         // 서비스가 종료될 때 실행
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    public class AppUseBinder extends Binder{
-
-        public AppUseTimeCheckService getService(){    return AppUseTimeCheckService.this;  }
-
     }
 
     public int getTime(String pkgName)
@@ -134,7 +133,12 @@ public class AppUseTimeCheckService extends Service {
         if(Build.VERSION.SDK_INT > 20)
         {
             if(usageStatsMap.containsKey(pkgName))
+            {
                 time = (int) usageStatsMap.get(pkgName).getTotalTimeInForeground();
+                if(tempPkgName.equals(pkgName))
+                    time += tempPkgUseTime;
+            }
+
             else
                 time = -2;
         }
