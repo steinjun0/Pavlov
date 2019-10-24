@@ -5,6 +5,8 @@ import android.location.Location;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -44,12 +46,13 @@ public class GpsCountMission extends Mission {
         Calendar now = Calendar.getInstance();
         if( exp.compareTo(now) <= 0 ) { condition = Mission.MISSION_FAILED; return; }
     }
-
+    @Override public String getTitle() { return title; }
     @Override public int getMissionID() { return missionID; }
     @Override public int getCondition() { return condition; }
     @Override public int getPresent() { return present; }
     @Override public int getGoal() { return goal; }
     @Override public int getType() { return type; }
     @Override public Calendar getDate() { return exp; }
-    @Override public Drawable getIcon() {return null;}
+    @Override public JSONObject getJSON() {return null;}
+    @Override public void setJSON(JSONObject jsonObject) {return;};
 }

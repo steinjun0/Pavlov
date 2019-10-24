@@ -4,6 +4,8 @@ import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.util.Calendar;
 
 import kr.osam.pavlov.Services.StepCounterService;
@@ -34,12 +36,13 @@ public class StepCountMisson extends Mission {
         Calendar now = Calendar.getInstance();
         if( (exp.getTimeInMillis() - now.getTimeInMillis()) <= 0 ) { condition = Mission.MISSION_FAILED; return; }
     }
-
+    @Override public String getTitle() { return title; }
     @Override public int getMissionID() { return missionID; }
     @Override public int getCondition() { return condition; }
     @Override public int getPresent() { return present; }
     @Override public int getGoal() { return goal; }
     @Override public int getType() { return type; }
     @Override public Calendar getDate() { return exp; }
-    @Override public Drawable getIcon() {return null;}
+    @Override public JSONObject getJSON() {return null;}
+    @Override public void setJSON(JSONObject jsonObject) {return;};
 }

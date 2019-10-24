@@ -3,6 +3,8 @@ package kr.osam.pavlov.Missons;
 import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 
+import org.json.JSONObject;
+
 import java.util.Calendar;
 
 public abstract class Mission {
@@ -28,12 +30,20 @@ public abstract class Mission {
     protected int condition;
     protected Calendar exp;
 
+    private String dbString;
+
+    public void setId(int id)
+    {
+        this.missionID = id;
+    }
     abstract public void upDate(IBinder binder);
+    abstract public String getTitle();
     abstract public Calendar getDate();
     abstract public int getMissionID();
     abstract public int getCondition();
     abstract public int getPresent();
     abstract public int getGoal();
     abstract public int getType();
-    abstract public Drawable getIcon();
+    abstract public JSONObject getJSON();                   //미션의 missionID와 type를 제외한 모든 데이터를 JSONObject로 반환하는 메서드
+    abstract public void setJSON(JSONObject jsonObject);    //JSONObject를 입력받아 missionId와 type를 제외한 모든 데이터를 미션에 저장하는 메서드
 }

@@ -107,7 +107,7 @@ public class MissionListAdapter extends BaseAdapter {
                 app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
                 app_minuteText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
                 app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                app_iconView.setImageDrawable((listItem.mission).getIcon());
+                app_iconView.setImageDrawable(((AppUseTimeMission)(listItem.mission)).getIcon());
             break;
 
             case Mission.MISSION_TYPE_WALK_DISTANCE:

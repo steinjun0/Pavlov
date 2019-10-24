@@ -1,90 +1,52 @@
 package kr.osam.pavlov;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.SystemClock;
-import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import kr.osam.pavlov.Missons.Mission;
+import kr.osam.pavlov.R;
 import kr.osam.pavlov.Services.MissionManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    ListView missionListView;
-    Intent intent;
-    boolean isRunning;
-    masterConn conn;
-    MissionListAdapter adapter;
-    UpdaterThread thread;
+    public masterConn conn;
+    public Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        missionListView = findViewById(R.id.MissionListView);
+        conn = new MainActivity.masterConn();
 
         intent = new Intent(this, MissionManager.class);
-        conn = new masterConn();
-        isRunning = true;
         startService(intent);
+        bindService(intent, conn, BIND_ABOVE_CLIENT);
 
+        Bundle bundle= new Bundle();
 
-        adapter = new MissionListAdapter();
-        missionListView.setAdapter(adapter);
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            bundle.putBinder("Binder",conn.m_service); }
 
-        thread = new UpdaterThread();
-        thread.start();
-
-        Intent addMissionIntent = new Intent(MainActivity.this,AddAppUseMissionActivity.class);
-        startActivity(addMissionIntent);
+        Intent activityIntent = new Intent(MainActivity.this, AddAppUseMissionActivity.class);
+        startActivity(activityIntent);
     }
 
-    class UpdaterThread extends Thread
-    {
-        @Override
-        public void run() {
-            while (isRunning)
-            {
-                try {
-                    long tmpTime = SystemClock.currentThreadTimeMillis();
+    @Override
+    protected void onStart() {
 
-                    bindService(intent, conn, BIND_ABOVE_CLIENT);
-
-                    adapter.CopyMissionsList(((MissionManager.MissionManagerBinder)conn.m_service).getService().missionList);
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //adapter.notifyDataSetChanged();
-                        }
-                    });
-
-                    unbindService(conn);
-
-                    tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
-                    sleep((250 - tmpTime)>0 ? (250 - tmpTime) : 0);
-                } catch (Exception e) { Log.d("CatchExeption", e.toString()); }
-            }
-
-            super.run();
-        }
+        super.onStart();
     }
 
     @Override
     protected void onResume() {
-        isRunning = true;
         super.onResume();
     }
 
@@ -92,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         // isRunning = false;
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     class masterConn implements ServiceConnection{
@@ -104,7 +71,29 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        isRunning = false;
+        //isRunning = false;
         super.onDestroy();
+    }
+
+    public static boolean isActivityAvailable(Activity activity) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return !activity.isFinishing() && !activity.isDestroyed();
+        } else {
+            return !activity.isFinishing();
+        }
+    }
+
+    @Nullable
+    public MissionManager getService()
+    {
+        bindService(intent, conn, BIND_ABOVE_CLIENT);
+
+        MissionManager manager = ((MissionManager.MissionManagerBinder)conn.m_service).getService();
+
+        return manager;
+    }
+    public void unbind()
+    {
+        unbindService(conn);
     }
 }

@@ -5,8 +5,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Binder;
 import android.os.Build;
@@ -16,11 +19,16 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.google.gson.JsonParser;
+
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import kr.osam.pavlov.Missons.AppUseTimeMission;
 import kr.osam.pavlov.Missons.Mission;
-import kr.osam.pavlov.PavlovDBParser;
+import kr.osam.pavlov.PavlovDBHelper;
 
 public class MissionManager extends Service {
 
@@ -43,8 +51,11 @@ public class MissionManager extends Service {
     //바인더 인스턴스
     MissionManagerBinder binder;
 
-    //미션을 저장할 DB
-    PavlovDBParser dbManager = new PavlovDBParser(this);
+
+    //DB 클래스
+//    PavlovDBHelper dbManager = new PavlovDBHelper(this);
+//    SQLiteDatabase missionDB = dbManager.getWritableDatabase();
+
 
 
     //생성자
@@ -53,6 +64,23 @@ public class MissionManager extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        //미션매니저가 시작되면
+        //바인더 초기화
+        binder = new MissionManagerBinder();
+
+        isManagerRunning = true;
+
+        //리스트 초기화 및 DB에서 값 받아오기
+        initializeLists();
+
+        //반복문 스레드 시작
+        ThreadAction manageMissions = new ThreadAction() ;
+        Thread serviceThread = new Thread(manageMissions) ;
+        serviceThread.start() ;
+
+        //서비스를 ForeGround로 올린다
+        setServiceOnForeGround();
     }
 
     @Override
@@ -63,22 +91,7 @@ public class MissionManager extends Service {
 //        Calendar tmp =  Calendar.getInstance();
 //        tmp.set(2019,10,24,23,00);
 
-        //미션매니저가 시작되면
-        //바인더 초기화
-        binder = new MissionManagerBinder();
 
-        isManagerRunning = true;
-
-        //리스트초기화
-        initializeLists();
-
-        //반복문 스레드 시작
-        ThreadAction manageMissions = new ThreadAction() ;
-        Thread serviceThread = new Thread(manageMissions) ;
-        serviceThread.start() ;
-
-        //서비스를 ForeGround로 올린다
-        setServiceOnForeGround();
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -95,6 +108,9 @@ public class MissionManager extends Service {
             mConn.add(new MissionServiceConnection());
             connectionStatus.add(false);
         }
+
+        //모든 미션 가져오기
+        //dbSelect();
     }
 
 
@@ -112,6 +128,7 @@ public class MissionManager extends Service {
             {
                 //미션들의 컨디션에 따라 서비스의 상태를 관리해준다
                 setServiceLife();
+                Log.d("Mission Number", ""+missionList.size());
 
                 //모든 미션에 대해
                 for(Mission currentMission : missionList)
@@ -177,7 +194,9 @@ public class MissionManager extends Service {
     }
 
     public void addMission(Mission _mission) {
+        //DB와 메모리에 초기 데이터 저장
         missionList.add(_mission);
+        //dbInsert(_mission);
     }
 
     class MissionServiceConnection implements ServiceConnection{
@@ -228,6 +247,89 @@ public class MissionManager extends Service {
         SystemClock.sleep(150);
         removeServiceOnForeground();
 
-        //DB에 모든 미션 데이터 저장
+        //DB 에 최종 데이터 저장
+
+
+
+//        for(Mission mission : missionList)
+//        {
+//            //dbUpdate(mission);
+//        }
+//        missionDB.close();
+//        dbManager.close();
     }
+
+
+//    //DB관련 메서드들
+//    void dbInsert(Mission mission) {
+//        ContentValues contentValues = new ContentValues();
+//
+//
+//        int type = mission.getType();
+//        JSONObject json = mission.getJSON();
+//
+//        contentValues.put("TYPE", type);
+//        contentValues.put("JSON", JsonToStr(json));
+//
+//        //생성된 id는 Mission 객체에 저장
+//        mission.setId((int)missionDB.insert("MISSIONS", null, contentValues));
+//    }
+//    void dbUpdate(Mission mission) {
+//        ContentValues contentValues = new ContentValues();
+//
+//
+//        int type = mission.getType();
+//        JSONObject json = mission.getJSON();
+//
+//        contentValues.put("TYPE", type);
+//        contentValues.put("JSON", JsonToStr(json));
+//
+//        String[] id = {String.valueOf(mission.getMissionID())};
+//        //생성된 id는 Mission 객체에 저장
+//        missionDB.update("MISSIONS", contentValues, "id=?", id);
+//    }
+//    void dbSelect()
+//    {
+//        Cursor c = missionDB.query("MISSIONS", null, null, null, null, null, null);
+//        while(c.moveToNext()) {
+//            Mission selectMission = null;
+//            int type = c.getInt(c.getColumnIndex("TYPE"));
+//            JSONObject jsonData;
+//            switch(type)
+//            {
+//                case Mission.MISSION_TYPE_ALARM:
+//                    break;
+//                case Mission.MISSION_TYPE_USEAGE_DEVICE:
+//                    break;
+//                case Mission.MISSION_TYPE_USEAGE_APP:
+//                    jsonData = strToJson(c.getString(c.getColumnIndex("JSON")));
+//                    selectMission = new AppUseTimeMission();
+//                    selectMission.setJSON(jsonData);
+//                    break;
+//                case Mission.MISSION_TYPE_WALK_DISTANCE:
+//                    break;
+//                case Mission.MISSION_TYPE_WALK_STEPCOUNT:
+//                    break;
+//            }
+//            if(selectMission != null)
+//            {
+//                missionList.add(selectMission);
+//            }
+//
+//        }
+//
+//    }
+//
+//    JSONObject strToJson(String jsonStr)
+//    {
+//        JsonParser parser = new JsonParser();
+//        Object obj = parser.parse( jsonStr );
+//
+//        return (JSONObject) obj;
+//    }
+//
+//    String JsonToStr(JSONObject json)
+//    {
+//        return json.toString().replace("{", "").replace("}", "");
+//    }
 }

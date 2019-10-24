@@ -129,7 +129,7 @@ public class AddAppUseMissionActivity extends AppCompatActivity {
                         limitTime += tp.getHour() * 3600000;
                         limitTime += tp.getMinute() * 60000;
                     }
-                    missionManagerService.addMission(new AppUseTimeMission(packages.get(selectedAppIdx).packageName, 0, limitTime, icons.get(selectedAppIdx)));
+                    missionManagerService.addMission(new AppUseTimeMission(packages.get(selectedAppIdx).packageName, missionManagerService.missionList.size(), limitTime, icons.get(selectedAppIdx)));
                     onBackPressed();
                 }
             });

@@ -4,7 +4,12 @@ import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 import kr.osam.pavlov.Services.AppUseTimeCheckService;
 import kr.osam.pavlov.Services.StepCounterService;
@@ -14,8 +19,23 @@ public class AppUseTimeMission extends Mission {
 
     Drawable icon;
 
+    public AppUseTimeMission()
+    {
+
+    }
+
     public AppUseTimeMission(String _title, int _ID, int _goal, Drawable icon)
     { title = _title; missionID = _ID; goal = _goal; condition = 0; type = 2; this.icon = icon;}
+
+    //남은 시간(초) 알아내는 함수
+    public int remainUseTime()
+    {
+        int remainSecond;
+        remainSecond = (goal - present + 1000)/1000;
+
+        return remainSecond;
+    }
+
 
     @Override
     public void upDate(IBinder binder) {
@@ -30,11 +50,28 @@ public class AppUseTimeMission extends Mission {
         //매일 밤 24시에 마지막 upDate후 DB에 저장되고 present는 0으로 초기화, condition은 1로 초기화됨
     }
 
+    @Override public String getTitle() { return title; }
     @Override public int getMissionID() { return missionID; }
     @Override public int getCondition() { return condition; }
     @Override public int getPresent() { return present; }
     @Override public int getGoal() { return goal; }
     @Override public int getType() { return type; }
     @Override public Calendar getDate() { return exp; }
-    @Override public Drawable getIcon() {return icon;}
+    @Override public JSONObject getJSON() {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("TITLE", title);
+            obj.put("GOAL", goal);
+            obj.put("PRESENT", present);
+            obj.put("EXP", exp.toString());
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return obj;
+        }
+
+        return null;
+    } // 데이터를 JSON으로 취함하여 가져옴
+    @Override public void setJSON(JSONObject jsonObject) { return; } // 받아온 JSON데이터로 미션 값 설정
+    public Drawable getIcon() {return icon;}
 }
