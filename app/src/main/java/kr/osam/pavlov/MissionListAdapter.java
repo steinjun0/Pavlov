@@ -95,20 +95,20 @@ public class MissionListAdapter extends BaseAdapter {
                 break;
 
             case Mission.MISSION_TYPE_USEAGE_APP:
-                convertView = inflater.inflate(R.layout.activity_app_usage,
+                convertView = inflater.inflate(R.layout.app_usage_checker,
                         parent, false);
                 TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
                 TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
-                TextView app_minuetText = convertView.findViewById(R.id.APPMinuetText);
+                TextView app_minuteText = convertView.findViewById(R.id.APPMinuteText);
                 TextView app_secText    = convertView.findViewById(R.id.APPSecText);
                 ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
 
                 app_titleText.setText(listItem.mission.title);
                 app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
-                app_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
+                app_minuteText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
                 app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                app_iconView.setImageDrawable(((AppUseTimeMission)(listItem.mission)).getIcon());
-                break;
+                app_iconView.setImageDrawable((listItem.mission).getIcon());
+            break;
 
             case Mission.MISSION_TYPE_WALK_DISTANCE:
 //                convertView = inflater.inflate(R.layout.gps_list_item,

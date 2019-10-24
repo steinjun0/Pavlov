@@ -38,7 +38,7 @@
         android:textSize="35dp" />
 
     <TextView
-        android:id="@+id/APPMinuetText"
+        android:id="@+id/APPMinuteText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="00"

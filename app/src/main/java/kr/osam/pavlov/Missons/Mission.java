@@ -35,4 +35,5 @@ public abstract class Mission {
     abstract public int getPresent();
     abstract public int getGoal();
     abstract public int getType();
+    abstract public Drawable getIcon();
 }

@@ -36,5 +36,5 @@ public class AppUseTimeMission extends Mission {
     @Override public int getGoal() { return goal; }
     @Override public int getType() { return type; }
     @Override public Calendar getDate() { return exp; }
-    public Drawable getIcon() {return icon;}
+    @Override public Drawable getIcon() {return icon;}
 }
