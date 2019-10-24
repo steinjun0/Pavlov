@@ -1,52 +1,63 @@
 package kr.osam.pavlov.Services;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
 import kr.osam.pavlov.Missons.GpsCountMission;
 import kr.osam.pavlov.Missons.Mission;
 import kr.osam.pavlov.Missons.StepCountMisson;
-import kr.osam.pavlov.PavlovDBParser;
 
 public class MissionManager extends Service {
 
-    public List<Mission>  missionList = new ArrayList<>();
+    public List<Mission> missionList = new ArrayList<>();
 
-    private List<Intent>  intentList  = new ArrayList<>(Mission.MISSION_NUM_OF_MISSION_TYPE);
-    private List<manageConn> mConn = new ArrayList<>(Mission.MISSION_NUM_OF_MISSION_TYPE);
-
-    boolean isManagerRunning;
-
-    public class MissionManagerBinder extends Binder{
-        public MissionManager getService() { return MissionManager.this; }
-    }
+    private Location now_Location;
+    private long steps;
 
     MissionManagerBinder binder;
 
-    PavlovDBParser dbManager = new PavlovDBParser(this);
+    LocationManager locationManager;
 
+    SensorManager sensorManager;
+    Sensor stepSensor;
+    StepSensorListener stepSensorlistener;
+    GetLocationListener locationListener;
 
-    public MissionManager() { }
+    public MissionManager() {}
 
     @Override
     public void onCreate() {
+
         //missionList.addAll(dbManager.readMission());
-        isManagerRunning = false;
+
+        locationManager =  (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
         Calendar tmp =  Calendar.getInstance();
         tmp.set(2019,9,24,14,00);
@@ -55,146 +66,38 @@ public class MissionManager extends Service {
         missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location> ()));
         missionList.add(new StepCountMisson("싶다",0, 20000, 0, tmp));
 
+        Log.d("test", "Service on!");
+
         super.onCreate();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        //throw new UnsupportedOperationException("Not yet implemented");
-
-        WatcherThread thread = new WatcherThread();
-        binder = new MissionManagerBinder();
-
-        isManagerRunning = true;
-
-        initIntent();
-        thread.start();
-
         setServiceOnForeGround();
+
+        locationListener = new GetLocationListener();
+        stepSensorlistener = new StepSensorListener();
+
+        sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        sensorManager.registerListener( stepSensorlistener ,stepSensor,SensorManager.SENSOR_DELAY_UI );
+        registerLocationUpdates();
 
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public void onDestroy() {
+        locationManager.removeUpdates(locationListener);
+        sensorManager.unregisterListener(stepSensorlistener);
 
-        return binder;
-    }
+        Log.d("test", "Service Down");
 
-    class WatcherThread extends Thread
-    {
-        @Override
-        public void run() {
-            while (isManagerRunning)
-            {
-                try {
-                    long tmpTime = SystemClock.currentThreadTimeMillis();
-
-                    circuitBraker();
-                    setBind();
-
-
-
-                    for(Mission curruntMission : missionList)
-                    {
-                        if(curruntMission.getCondition()==0)
-                        {
-                            if(mConn.get(curruntMission.getType()).m_service != null)
-                            {
-                                curruntMission.upDate(mConn.get(curruntMission.getType()).m_service);
-                            }
-                        }
-                    }
-
-
-
-                    unsetBind();
-
-                    tmpTime = SystemClock.currentThreadTimeMillis() - tmpTime;
-                    sleep((50 - tmpTime)>0 ? (50 - tmpTime) : 0);
-
-                } catch (Exception e) { Log.d("CatchExeption", e.toString()); }
-            }
-            removeServiceOnForeground();
-
-            super.run();
-        }
+        removeServiceOnForeground();
+        super.onDestroy();
     }
 
     public void addMission(Mission _mission) { missionList.add(_mission); }
-
-    private void initIntent()
-    {
-        intentList.add(new Intent("TODO"));
-        intentList.add(new Intent("TODO"));
-        intentList.add(new Intent("TODO"));
-        intentList.add(new Intent(this, GPSDistanceService.class));
-        intentList.add(new Intent(this, StepCounterService.class));
-
-        for(int i = 0; i < 5; i++)
-        {
-            mConn.add(new manageConn());
-        }
-    }
-
-    class manageConn implements ServiceConnection{
-        public IBinder m_service;
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) { m_service = service;}
-        @Override
-        public void onServiceDisconnected(ComponentName name) { m_service = null; }
-    }
-
-    private boolean containMission(int _missiontype)
-    {
-        for(Mission mission : missionList)
-        {
-            if(mission.getType() == _missiontype
-                    && mission.getCondition() == Mission.MISSION_ON_PROGRESS) return true;
-        }
-        return false;
-    }
-    private void circuitBraker()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) && mConn.get(missiontype).m_service==null )
-            {
-                Log.d("Missions", missiontype + "st Mission Service is On." );
-                startService(intentList.get(missiontype));
-                //bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_AUTO_CREATE);
-            }
-            if( (!containMission(missiontype)) && mConn.get(missiontype).m_service!=null )
-            {
-                Log.d("Missions", missiontype + "st Mission Service is Off." );
-                stopService(intentList.get(missiontype));
-                //unbindService(mConn.get(missiontype));
-            }
-        }
-    }
-
-    private void setBind()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) )
-            {
-                bindService(intentList.get(missiontype),mConn.get(missiontype), BIND_ABOVE_CLIENT);
-            }
-        }
-    }
-    private void unsetBind()
-    {
-        for(int missiontype = 0; missiontype < Mission.MISSION_NUM_OF_MISSION_TYPE; missiontype++)
-        {
-            if( containMission(missiontype) )
-            {
-                unbindService(mConn.get(missiontype));
-            }
-        }
-
-    }
 
     private void setServiceOnForeGround()
     {
@@ -228,11 +131,89 @@ public class MissionManager extends Service {
         }
     }
 
-    @Override
-    public void onDestroy() {
-        isManagerRunning=false;
-        SystemClock.sleep(150);
-        removeServiceOnForeground();
-        super.onDestroy();
+    @Nullable @Override public IBinder onBind(Intent intent) {
+        binder = new MissionManagerBinder();
+        Log.d("test", "Service Bound!");
+        return binder;
+    }
+
+    class GetLocationListener implements LocationListener
+    {
+        @Override
+        public void onLocationChanged(Location location) {
+
+            now_Location = location;
+
+            for(Mission mission : missionList)
+            {
+                if(mission.getType() == Mission.MISSION_TYPE_WALK_DISTANCE)
+                {
+                    Intent intent = LocationEvent();
+                    mission.upDate(intent);
+                }
+            }
+        }
+        @Override public void onProviderDisabled(String s) { }
+        @Override public void onProviderEnabled(String s) { }
+        @Override public void onStatusChanged(String s, int i, Bundle bundle) { }
+    }
+    class StepSensorListener implements SensorEventListener
+    {
+        @Override public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if( event.sensor.getType() == Sensor.TYPE_STEP_COUNTER )
+            {
+                steps = (int)event.values[0];
+
+                for(Mission mission : missionList)
+                {
+                    if(mission.getType() == Mission.MISSION_TYPE_WALK_DISTANCE)
+                    {
+                        Intent intent = stepEvent();
+                        mission.upDate(intent);
+                    }
+                }
+            }
+        }
+    }
+
+    public class MissionManagerBinder extends Binder
+    {
+        public MissionManager getService() { return MissionManager.this; }
+    }
+
+    private void registerLocationUpdates() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) == true)
+                {
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, .01f, locationListener);
+                }
+                if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true)
+                {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, .01f, locationListener);
+                }
+            }
+        }
+    }
+
+    Intent stepEvent()
+    {
+        Intent intent = new Intent("Event");
+        Log.d("test", "stepEvent!");
+        intent.putExtra("Steps", steps);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        return intent;
+    }
+    Intent LocationEvent()
+    {
+        Intent intent = new Intent("Event");
+        Log.d("test", "locationEvent!");
+        intent.putExtra("latitude", now_Location.getLongitude());
+        intent.putExtra("longitude", now_Location.getLatitude());
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        return intent;
     }
 }

@@ -1,6 +1,6 @@
 package kr.osam.pavlov.Missons;
 
-import android.os.IBinder;
+import android.content.Intent;
 
 import java.util.Calendar;
 
@@ -27,7 +27,7 @@ public abstract class Mission {
     protected int condition;
     protected Calendar exp;
 
-    abstract public void upDate(IBinder binder);
+    abstract public void upDate(Intent intent);
     abstract public Calendar getDate();
     abstract public int getMissionID();
     abstract public int getCondition();

@@ -1,81 +1,101 @@
 package kr.osam.pavlov.UIComponent;
 
-import android.app.Activity;
+import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import kr.osam.pavlov.R;
 import kr.osam.pavlov.Services.MissionManager;
 
 public class MainActivity extends AppCompatActivity {
 
+    String[] permission_list = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+    };
+
     public masterConn conn;
     public Intent intent;
+    EventReceiver receiver;
 
-    CustomListViewFragment frag;
+    ListView missionListView;
+    MissionListAdapter adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        conn = new MainActivity.masterConn();
+        conn = new masterConn();
 
         intent = new Intent(this, MissionManager.class);
         startService(intent);
-        bindService(intent, conn, BIND_ABOVE_CLIENT);
 
-        Bundle bundle= new Bundle();
+        missionListView = findViewById(R.id.MissionListView);
 
-        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            bundle.putBinder("Binder",conn.m_service); }
+        receiver = new EventReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter("Event"));
 
-        frag = new CustomListViewFragment();
-        frag.setArguments(bundle);
-        getSupportFragmentManager().beginTransaction().replace(R.id.FragmentContents, frag).commit();
-
-
+        checkPermission();
 
     }
 
     @Override
     protected void onStart() {
 
+        adapter = new MissionListAdapter();
+        missionListView.setAdapter(adapter);
+
         super.onStart();
     }
 
     @Override
     protected void onResume() {
+
+        bindService(intent, conn, BIND_ABOVE_CLIENT);
+
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        // isRunning = false;
+
         super.onPause();
     }
 
     @Override
     protected void onStop() {
+        unbindService(conn);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         super.onStop();
     }
 
     class masterConn implements ServiceConnection{
         public IBinder m_service;
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) { m_service = service;}
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d("test", "Binder Got!");m_service = service;}
         @Override
         public void onServiceDisconnected(ComponentName name) { m_service = null; }
     }
@@ -85,27 +105,6 @@ public class MainActivity extends AppCompatActivity {
         //isRunning = false;
         super.onDestroy();
     }
-
-    public static boolean isActivityAvailable(Activity activity) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return !activity.isFinishing() && !activity.isDestroyed();
-        } else {
-            return !activity.isFinishing();
-        }
-    }
-    public MissionManager getService()
-    {
-        bindService(intent, conn, BIND_ABOVE_CLIENT);
-
-        MissionManager manager = ((MissionManager.MissionManagerBinder)conn.m_service).getService();
-
-        return manager;
-    }
-    public void unbind()
-    {
-        unbindService(conn);
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -135,5 +134,48 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    // 권한 체크 메서드
+    public void checkPermission(){
+        // 현재 안드로이드 버전이 6.0 미만이면 메서드를 종료한다.
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
+            return;
+        }
+        // 각 권한의 허용 여부를 확인한다.
+        for(String permission : permission_list){
+            // 권한 허용 여부를 확인한다.
+            int chk = checkCallingOrSelfPermission(permission);
+            // 거부 상태라고 한다면..
+            if(chk == PackageManager.PERMISSION_DENIED){
+                // 사용자에게 권한 허용여부를 확인하는 창을 띄운다.
+                requestPermissions(permission_list, 0);
+            }
+        }
+    }
+    // 권한 확인 여부가 완료되면 호출되는 메서드
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // 사용자가 권한 허용 여부를 확인한다.
+        for(int i = 0 ; i < grantResults.length ; i++){
+            if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+            } else {
+            }
+        }
+    }
+
+    class EventReceiver extends BroadcastReceiver
+    {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d("test", "Got it!");
+            if(conn.m_service != null)
+            {
+                adapter.CopyMissionsList(((MissionManager.MissionManagerBinder)conn.m_service).getService().missionList);
+                adapter.notifyDataSetChanged();
+            }
+        }
     }
 }

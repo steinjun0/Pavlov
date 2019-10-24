@@ -1,32 +1,29 @@
 package kr.osam.pavlov.Missons;
 
-import android.os.IBinder;
-import android.util.Log;
+import android.content.Intent;
 
 import java.util.Calendar;
 
-import kr.osam.pavlov.Services.StepCounterService;
-
 public class StepCountMisson extends Mission {
 
-    int step_Now;
-    int step_Prev;
+    long step_Now;
+    long step_Prev;
 
     public StepCountMisson(String _title, int _ID, int _goal, int _present, Calendar _exp)
                 { title = _title; missionID = _ID; goal = _goal; present = _present; type = Mission.MISSION_TYPE_WALK_STEPCOUNT; condition = 0;
                   exp = _exp; step_Now = 0; step_Prev = 0; }
 
     @Override
-    public void upDate(IBinder binder) {
+    public void upDate(Intent intent) {
 
         if(step_Prev == 0)
         {
-            step_Now =  ((StepCounterService.StepCounterBinder)binder).getService().getSteps();
+            step_Now =  intent.getLongExtra("Steps", 0);
             step_Prev = step_Now;
         }
 
         step_Prev = step_Now;
-        step_Now =  ((StepCounterService.StepCounterBinder)binder).getService().getSteps();
+        step_Now = intent.getLongExtra("Steps", 0);
         present += (step_Now - step_Prev);
 
         if( present >= goal ) { condition = Mission.MISSION_SUCCES; return; }

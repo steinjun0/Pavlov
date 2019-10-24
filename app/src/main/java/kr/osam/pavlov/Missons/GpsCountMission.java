@@ -1,11 +1,10 @@
 package kr.osam.pavlov.Missons;
 
+import android.content.Intent;
 import android.location.Location;
-import android.os.IBinder;
+
 import java.util.Calendar;
 import java.util.List;
-
-import kr.osam.pavlov.Services.GPSDistanceService;
 
 public class GpsCountMission extends Mission {
 
@@ -23,10 +22,15 @@ public class GpsCountMission extends Mission {
       location_prev = (locationList.isEmpty()?null:locationList.get(locationList.size()-1));}
 
     @Override
-    public void upDate(IBinder binder) {
+    public void upDate(Intent intent) {
+
+        Location location_Get = new Location("temp");
+        location_Get.setLatitude(intent.getDoubleExtra("Latitude", 0.));
+        location_Get.setLongitude(intent.getDoubleExtra("Longitute", 0.));
+
         location_prev = location_now;
         locationList.add(location_now);
-        location_now = ((GPSDistanceService.GPSDistanceBinder)binder).getService().getLoctaion();
+        location_now = location_Get;
         if( location_prev == null ) { return; }
 
         float tmp = location_now.distanceTo( location_prev );
