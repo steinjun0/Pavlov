@@ -1,5 +1,6 @@
 package kr.osam.pavlov.UIComponent;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -87,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
             return !activity.isFinishing();
         }
     }
+
+    @Nullable
     public MissionManager getService()
     {
         bindService(intent, conn, BIND_ABOVE_CLIENT);

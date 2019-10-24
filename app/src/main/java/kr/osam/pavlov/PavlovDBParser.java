@@ -16,12 +16,12 @@ public class PavlovDBParser extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         String sql = "create table Missions("
-                    +"idx integer primary key autoincrement, "
-                    +"title text not null,"
-                    +"serviceID integer not null,"
-                    +"isWorking integer not null,"
-                    +"JSONText text not null"
-                    +")";
+                +"idx integer primary key autoincrement, "
+                +"title text not null,"
+                +"serviceID integer not null,"
+                +"isWorking integer not null,"
+                +"JSONText text not null"
+                +")";
         sqLiteDatabase.execSQL(sql);
     }
 

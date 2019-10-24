@@ -76,8 +76,6 @@ public class CustomListViewFragment extends Fragment {
                 try {
                     long tmpTime = SystemClock.currentThreadTimeMillis();
 
-                    Log.d("Test", "씨이바아아아");
-
                     adapter.CopyMissionsList(((MainActivity)getActivity()).getService().missionList);
 
                     activity.unbind();

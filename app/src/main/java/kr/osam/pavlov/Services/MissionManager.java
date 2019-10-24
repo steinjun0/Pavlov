@@ -18,10 +18,13 @@ import androidx.core.app.NotificationCompat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import kr.osam.pavlov.Missons.AppUseTimeMission;
 import kr.osam.pavlov.Missons.GpsCountMission;
 import kr.osam.pavlov.Missons.Mission;
 import kr.osam.pavlov.Missons.StepCountMisson;
 import kr.osam.pavlov.PavlovDBParser;
+import kr.osam.pavlov.R;
 
 public class MissionManager extends Service {
 
@@ -49,11 +52,13 @@ public class MissionManager extends Service {
         isManagerRunning = false;
 
         Calendar tmp =  Calendar.getInstance();
-        tmp.set(2019,9,24,14,00);
+        tmp.set(2019,9,24,23,00);
 
         missionList.add(new StepCountMisson("집에",0, 50, 0, tmp));
-        missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location> ()));
-        missionList.add(new StepCountMisson("싶다",0, 20000, 0, tmp));
+        missionList.add(new GpsCountMission("가고",0, 30, 0, tmp, new ArrayList<Location>()));
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
+            missionList.add(new AppUseTimeMission("com.kakao.talk", 0, 20000, tmp, getDrawable(R.drawable.common_full_open_on_phone)));
+        }
 
         super.onCreate();
     }
@@ -128,7 +133,7 @@ public class MissionManager extends Service {
     {
         intentList.add(new Intent("TODO"));
         intentList.add(new Intent("TODO"));
-        intentList.add(new Intent("TODO"));
+        intentList.add(new Intent(this, AppUseTimeCheckService.class));
         intentList.add(new Intent(this, GPSDistanceService.class));
         intentList.add(new Intent(this, StepCounterService.class));
 

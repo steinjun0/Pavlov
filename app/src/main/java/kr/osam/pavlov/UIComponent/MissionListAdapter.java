@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import kr.osam.pavlov.Missons.AppUseTimeMission;
 import kr.osam.pavlov.Missons.Mission;
 import kr.osam.pavlov.R;
 
@@ -106,7 +107,7 @@ public class MissionListAdapter extends BaseAdapter {
                     app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
                     app_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
                     app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                    // TODO app_iconView.setImageDrawable(((아무튼)listItem.mission).Drawable);
+                    app_iconView.setImageDrawable(((AppUseTimeMission)listItem.mission).getIcon());
                     break;
 
                 case Mission.MISSION_TYPE_WALK_DISTANCE:
@@ -143,8 +144,8 @@ public class MissionListAdapter extends BaseAdapter {
 
                     GPS_titleText.setText(listItem.mission.title);
                     GPS_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
-                                         ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
-                                         ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
+                            ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
+                            ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
 
 
 

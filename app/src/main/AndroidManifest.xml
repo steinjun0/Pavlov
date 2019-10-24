@@ -3,6 +3,7 @@
     package="kr.osam.pavlov">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -14,16 +15,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <service
             android:name=".Services.MissionManager"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
         <service
             android:name=".Services.GPSDistanceService"
             android:enabled="true"
             android:exported="false" />
         <service
             android:name=".Services.StepCounterService"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".Services.AppUseTimeCheckService"
             android:enabled="true"
             android:exported="false" />
 
@@ -33,9 +39,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
-        <activity android:name=".UIComponent.Gps_Meter_Activity"></activity>
-        <activity android:name=".UIComponent.StepCountingActivity"></activity>
+        <activity android:name=".UIComponent.Gps_Meter_Activity" />
+        <activity android:name=".UIComponent.StepCountingActivity" />
+        <activity android:name=".UIComponent.AddAppUseMissionActivity" />
+        <activity android:name=".UIComponent.AppUsageActivity">
+
+
+        </activity>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
