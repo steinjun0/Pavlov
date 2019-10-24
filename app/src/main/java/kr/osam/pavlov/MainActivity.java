@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //missionListView = findViewById(R.id.MissionListView);
+        missionListView = findViewById(R.id.MissionListView);
 
         intent = new Intent(this, MissionManager.class);
         conn = new masterConn();
@@ -41,11 +41,11 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
 
 
-//        adapter = new MissionListAdapter();
-//        missionListView.setAdapter(adapter);
+        adapter = new MissionListAdapter();
+        missionListView.setAdapter(adapter);
 
-//        thread = new UpdaterThread();
-//        thread.start();
+        thread = new UpdaterThread();
+        thread.start();
 
         Intent addMissionIntent = new Intent(MainActivity.this,AddAppUseMissionActivity.class);
         startActivity(addMissionIntent);

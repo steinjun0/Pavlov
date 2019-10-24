@@ -1,5 +1,6 @@
 package kr.osam.pavlov.Missons;
 
+import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 
 import java.util.Calendar;
@@ -34,4 +35,5 @@ public abstract class Mission {
     abstract public int getPresent();
     abstract public int getGoal();
     abstract public int getType();
+    abstract public Drawable getIcon();
 }

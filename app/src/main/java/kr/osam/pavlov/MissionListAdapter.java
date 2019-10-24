@@ -3,6 +3,7 @@ package kr.osam.pavlov;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import kr.osam.pavlov.Missons.AppUseTimeMission;
 import kr.osam.pavlov.Missons.Mission;
 
 public class MissionListAdapter extends BaseAdapter {
@@ -45,6 +47,7 @@ public class MissionListAdapter extends BaseAdapter {
     // Adapter에 사용되는 데이터의 개수를 리턴. : 필수 구현
     @Override
     public int getCount() {
+        Log.d("test100", "size : " + missionListItems.size());
         return missionListItems.size() ;
     }
 
@@ -77,7 +80,7 @@ public class MissionListAdapter extends BaseAdapter {
 //                alarm_DateText.setText(subtitle);
 //                alarm_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
 //                alarm_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
-                break;
+//                break;
 
             case Mission.MISSION_TYPE_USEAGE_DEVICE:
 //                convertView = inflater.inflate(R.layout.timechecker_list_item,
@@ -94,20 +97,20 @@ public class MissionListAdapter extends BaseAdapter {
                 break;
 
             case Mission.MISSION_TYPE_USEAGE_APP:
-//                convertView = inflater.inflate(R.layout.activity_app_usage,
-//                        parent, false);
-//                TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
-//                TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
-//                TextView app_minuetText = convertView.findViewById(R.id.APPMinuetText);
-//                TextView app_secText    = convertView.findViewById(R.id.APPSecText);
-//                ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
-//
-//                app_titleText.setText(listItem.mission.title);
-//                app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
-//                app_minuetText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
-//                app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
-                // TODO app_iconView.setImageDrawable(((아무튼)listItem.mission).Drawable);
-                break;
+                convertView = inflater.inflate(R.layout.app_usage_checker,
+                        parent, false);
+                TextView app_titleText  = convertView.findViewById(R.id.APPTitleText);
+                TextView app_hourText   = convertView.findViewById(R.id.APPHourText);
+                TextView app_minuteText = convertView.findViewById(R.id.APPMinuteText);
+                TextView app_secText    = convertView.findViewById(R.id.APPSecText);
+                ImageView app_iconView  = convertView.findViewById(R.id.APPiconView);
+
+                app_titleText.setText(listItem.mission.title);
+                app_hourText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.HOUR_OF_DAY)));
+                app_minuteText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.MINUTE)));
+                app_secText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.SECOND)));
+                app_iconView.setImageDrawable((listItem.mission).getIcon());
+            break;
 
             case Mission.MISSION_TYPE_WALK_DISTANCE:
 //                convertView = inflater.inflate(R.layout.gps_list_item,
@@ -145,7 +148,14 @@ public class MissionListAdapter extends BaseAdapter {
 //                GPS_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
 //                        ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
 //                        ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
-//                GPS_PresentText.setText((listItem.mission.getPresent()<1000?listItem.mission.getPresent() + "m":((float)listItem.mission.getPresent()/1000)+ "km"));
+//
+//
+//
+//                GPS_PresentText.setText(
+//                        listItem.mission.getPresent() > listItem.mission.getGoal()
+//                                ? (listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000)+ "km")
+//                                : (listItem.mission.getPresent()<1000?listItem.mission.getPresent() + "m":((float)listItem.mission.getPresent()/1000)+ "km")
+//                );
 //                GPS_GoalText.setText((listItem.mission.getGoal()<1000?listItem.mission.getGoal() + "m":((float)listItem.mission.getGoal()/1000) + "km"));
 //                GPS_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*GPS_progressBar.getMax()));
                 break;
@@ -187,11 +197,17 @@ public class MissionListAdapter extends BaseAdapter {
 //                Step_DateText.setText(ByTwoChar(listItem.mission.getDate().get(Calendar.YEAR)) + "-" +
 //                        ByTwoChar(listItem.mission.getDate().get(Calendar.MONTH)) + "-" +
 //                        ByTwoChar(listItem.mission.getDate().get(Calendar.DAY_OF_MONTH)));
-//                Step_PresentText.setText(listItem.mission.getPresent() + "걸음");
+//
+//                Step_PresentText.setText(
+//                        listItem.mission.getPresent() > listItem.mission.getGoal()
+//                                ? (listItem.mission.getGoal() + "걸음")
+//                                : (listItem.mission.getPresent() + "걸음")
+//                );
 //                Step_GoalText.setText(listItem.mission.getGoal() + "걸음");
 //                Step_progressBar.setProgress((int)((float)listItem.mission.getPresent()/(float)listItem.mission.getGoal()*Step_progressBar.getMax()));
                 break;
         }
+        // }
 
         ViewGroup.LayoutParams params = convertView.getLayoutParams();
         params.height = 256;
