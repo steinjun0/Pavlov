@@ -17,11 +17,11 @@ Project of OSAM!
    없음.
 
 6. 배포자 및 개발자의 연락처 정보 (Contact Information)
-   상병 석준영
-   상병 김민수
+   상병 석준영 1142308@naver.com
+   상병 김민수 minsuukimm@naver.com
    병장 문준영 moonjunyyy@naver.com
-   일병 장윤석
-   일병 신동하
+   일병 장윤석 yooonseokj@naver.com 
+   일병 신동하 sdh5837@naver.com
 
 7. 알려진 버그 (Known Issues)
   추후 기입
