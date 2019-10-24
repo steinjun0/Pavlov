@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+
+        android:id="@+id/menu1"
+
+        android:icon="@drawable/ic_menu_share"
+
+        android:title="선택..." />
+
+    <item
+
+        android:id="@+id/menu2"
+
+        android:icon="@drawable/ic_menu_manage"
+
+        android:title="레이아웃" />
+
+</menu>

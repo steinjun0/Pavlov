@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Pavlov</string>
+
+    <string name="name">Name: </string>
+    <string name="email">Email: </string>
+    <string name="check">Check Details</string>
+
+
+    <string name="action_settings">오른쪽위 플로팅</string>
+    <string name="closed">closed</string>
+    <string name="open">open</string>
+    <string name="navigation_drawer_open">navigation오픈</string>
+    <string name="navigation_drawer_close">navigation클로즈</string>
+</resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="30dp"
+    android:layout_marginRight="30dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/TimeTitleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="12"
+        android:text="남은 사용 시간"
+        android:textSize="24dp" />
+
+    <TextView
+        android:id="@+id/TimeHourText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:gravity="center|center_vertical"
+        android:text="00"
+        android:textSize="35dp" />
+
+    <TextView
+        android:id="@+id/TimeHM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:gravity="center|center_vertical"
+        android:text=":"
+        android:textSize="35dp" />
+
+    <TextView
+        android:id="@+id/TimeMinuetText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:gravity="center|center_vertical"
+        android:text="00"
+        android:textSize="35dp" />
+
+    <TextView
+        android:id="@+id/TimeMS"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:gravity="center|center_vertical"
+        android:text=":"
+        android:textSize="35dp" />
+
+    <TextView
+        android:id="@+id/TimeSecText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:gravity="center|center_vertical"
+        android:text="00"
+        android:textSize="35dp" />
+
+</LinearLayout>
